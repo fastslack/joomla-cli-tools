@@ -22,34 +22,13 @@ defined('_JEXEC') or die;
 final class JConfig
 {
 	/**
-	* The database configuration.
-	*
-	* @vars strings
+	* Simulate login configuration's.
 	*/
-	public $dbtype = 'mysqli';
-	public $host = 'localhost';
-	public $user = '';
-	public $password = '';
-	public $db = '';
-	public $dbprefix = 'jos_';
-	/**
-	* The old database configuration.
-	*
-	* @vars strings
-	*/
-	public $old_dbtype = 'mysqli';
-	public $old_hostname = 'localhost';
-	public $old_username = '';
-	public $old_password = '';
-	public $old_db = '';
-	public $old_dbprefix = 'jos_';
-	/**
-	* The rest configuration.
-	*
-	* @vars strings
-	*/
-	public $rest_hostname = 'http://8.8.8.8/';
-	public $rest_username = 'admin';
-	public $rest_password = 'adminpass';
-	public $rest_key = 'beer';
+	public $username = 'admin';
+	public $passwd = '';
+	public $url = 'http://example.org/';
+	public $query = 'index.php?option=com_content&format=raw';
+	public $ssl_verifypeer = false;
+	public $cookiejar = './cookie.txt';
+	public $cookiefile = './cookie.txt';
 }
