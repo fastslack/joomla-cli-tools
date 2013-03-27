@@ -1,0 +1,55 @@
+<?php
+/**
+ * @version		    $Id: 
+ * @package		    Matware
+ * @subpackage	  JoomlaCliTools
+ * @copyright			CopyRight 2004-2013 Matware All rights reserved.
+ * @author				Matias Aguirre
+ * @email   			maguirre@matware.com.ar
+ * @link					http://www.matware.com.ar/
+ * @license				GNU/GPL http://www.gnu.org/licenses/gpl-3.0-standalone.html
+ */
+
+// Prevent direct access to this file outside of a calling application.
+defined('_JEXEC') or die;
+
+/**
+* JoomlaCliTools configuration class.
+*
+* @package Matware
+* @since 1.0
+*/
+final class JConfig
+{
+	/**
+	* The database configuration.
+	*
+	* @vars strings
+	*/
+	public $dbtype = 'mysqli';
+	public $host = 'localhost';
+	public $user = '';
+	public $password = '';
+	public $db = '';
+	public $dbprefix = 'jos_';
+	/**
+	* The old database configuration.
+	*
+	* @vars strings
+	*/
+	public $old_dbtype = 'mysqli';
+	public $old_hostname = 'localhost';
+	public $old_username = '';
+	public $old_password = '';
+	public $old_db = '';
+	public $old_dbprefix = 'jos_';
+	/**
+	* The rest configuration.
+	*
+	* @vars strings
+	*/
+	public $rest_hostname = 'http://8.8.8.8/';
+	public $rest_username = 'admin';
+	public $rest_password = 'adminpass';
+	public $rest_key = 'beer';
+}

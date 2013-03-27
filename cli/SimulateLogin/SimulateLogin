@@ -1,0 +1,92 @@
+#!/usr/bin/php
+<?php
+/**
+ * @version		    $Id: 
+ * @package		    Matware
+ * @subpackage	  JoomlaCliTools
+ * @copyright			CopyRight 2004-2013 Matware All rights reserved.
+ * @author				Matias Aguirre
+ * @email   			maguirre@matware.com.ar
+ * @link					http://www.matware.com.ar/
+ * @license				GNU/GPL http://www.gnu.org/licenses/gpl-3.0-standalone.html
+ */
+// We are a valid Joomla entry point.
+define('_JEXEC', 1);
+
+
+// Setup the base path related constant.
+define('JPATH_BASE', dirname(__FILE__));
+
+// Bootstrap the application.
+require dirname(dirname(dirname(__FILE__))).'/bootstrap.php';
+
+class SimulateLogin extends JApplicationCli
+{
+	/**
+	* Class constructor.
+	*
+	* @return void
+	*
+	* @since 2.5.0
+	*/
+	public function __construct()
+	{
+		// Call the parent __construct method so it bootstraps the application class.
+		parent::__construct();
+	
+		// Getting the parameters
+		$this->params = new JRegistry(new JConfig);
+	}
+
+
+	/**
+	 * execute
+	 *
+	 * @return	none
+	 * @since	2.5.0
+	 */
+  public function execute()
+  {
+		// Get the JHttp object
+		$http = JHttpFactory::getHttp($this->params, 'curl');
+		// Get the url to see if we are logged
+		$token = $http->get($this->get('url'))->body;
+
+		// Check if token is present
+		if (preg_match('/name="([a-zA-z0-9]{32})"/', $token) == 1) {
+			// Get the token
+			preg_match_all('/name="([a-zA-z0-9]{32})"/', $token, $spoof);
+
+			// POST fields
+			$postfields = array();
+			$postfields['username'] = urlencode($this->get('username'));
+			$postfields['passwd'] = urlencode($this->get('passwd'));
+			$postfields['lang'] = '';
+			$postfields['option'] = 'com_login';
+			$postfields['task'] = 'login';
+			$postfields[$spoof[1][0]] = '1';
+
+			// Login and save cookie.txt
+			$response = $http->post($this->get('url'), $postfields);
+		}
+
+		// Get the URL with query and print the return
+		echo $http->get($this->get('url').$this->get('query'))->body;
+
+	} // end method
+
+} // end class
+
+// Wrap the execution in a try statement to catch any exceptions thrown anywhere in the script.
+try
+{
+	// Instantiate the application object, passing the class name to JCli::getInstance
+	// and use chaining to execute the application.
+	JApplicationCli::getInstance('SimulateLogin')->execute();
+}
+catch (Exception $e)
+{
+	// An exception has been caught, just echo the message.
+	fwrite(STDOUT, $e->getMessage() . "\n");
+	exit($e->getCode());
+}
