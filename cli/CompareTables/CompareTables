@@ -1,0 +1,116 @@
+#!/usr/bin/php
+<?php
+/**
+* JoomlaCliTools
+*
+* @version $Id$
+* @package MatWare
+* @subpackage JoomlaCliTools
+* @copyright Copyright 2004 - 2013 Matias Aguire. All rights reserved.
+* @license GNU General Public License version 2 or later.
+* @author Matias Aguirre <maguirre@matware.com.ar>
+* @link http://www.matware.com.ar
+*/
+// We are a valid Joomla entry point.
+define('_JEXEC', 1);
+
+// Setup the base path related constant.
+define('JPATH_BASE', dirname(__FILE__));
+
+// Bootstrap the application.
+require dirname(dirname(dirname(__FILE__))).'/bootstrap.php';
+
+class CompareTables extends JApplicationCli
+{
+	/**
+	* Class constructor.
+	*
+	* @return void
+	*
+	* @since 2.5.0
+	*/
+	public function __construct()
+	{
+		// Call the parent __construct method so it bootstraps the application class.
+		parent::__construct();
+	
+		// Getting the parameters
+		$this->params = new JRegistry(new JConfig);
+
+		// Creating first dabatase instance
+		$this->_db = JFactory::getDBO();
+
+		// Creating second dabatase instance
+		$this->_db_old = JDatabase::getInstance(
+			array(
+			'driver' => $this->get('old_dbtype'),
+			'host' => $this->get('old_hostname'),
+			'user' => $this->get('old_username'),
+			'password' => $this->get('old_password'),
+			'database' => $this->get('old_db'),
+			'prefix' => $this->get('old_dbprefix'),
+			)
+		);
+	}
+
+
+	/**
+	 * Execute
+	 *
+	 * @return	none
+	 * @since	2.5.0
+	 */
+	public function execute()
+	{
+
+		/*
+		 * Getting the first table columns and save it to tmp file
+		 */
+		$query = "SHOW COLUMNS FROM {$this->get('table')}";
+		$this->_db->setQuery( $query );
+		$columns1 = $this->_db->loadObjectList();
+
+		$tbl1 = fopen('table1.tmp', 'wb');
+
+		for($i=0;$i<count($columns1);$i++) {
+			fwrite($tbl1, $columns1[$i]->Field."\n");
+		}
+		fclose($tbl1);
+
+		/*
+		 * Getting the second table columns and save it to tmp file
+		 */
+		$query = "SHOW COLUMNS FROM {$this->get('old_table')}";
+		$this->_db_old->setQuery( $query );
+		$columns2 = $this->_db_old->loadObjectList();
+
+		$tbl2 = fopen('table2.tmp', 'wb');
+
+		for($i=0;$i<count($columns2);$i++) {
+			fwrite($tbl2, $columns2[$i]->Field."\n");
+		}
+		fclose($tbl2);
+
+		/*
+		 * Return the diffences
+		 */
+		system('diff -Nru table1.tmp table2.tmp');
+		//xdiff_file_diff('table1.tmp', 'table2.tmp', 'my_script.diff', 2);
+
+	} // end method
+
+} // end class
+
+// Wrap the execution in a try statement to catch any exceptions thrown anywhere in the script.
+try
+{
+	// Instantiate the application object, passing the class name to JCli::getInstance
+	// and use chaining to execute the application.
+	JApplicationCli::getInstance('CompareTables')->execute();
+}
+catch (Exception $e)
+{
+	// An exception has been caught, just echo the message.
+	fwrite(STDOUT, $e->getMessage() . "\n");
+	exit($e->getCode());
+}
