@@ -5,8 +5,8 @@
 *
 * @version $Id$
 * @package MatWare
-*	@subpackage JoomlaCliTools
-*	@copyright Copyright 2004 - 2013 Matias Aguire. All rights reserved.
+* @subpackage JoomlaCliTools
+* @copyright Copyright 2004 - 2013 Matias Aguire. All rights reserved.
 * @license GNU General Public License version 2 or later.
 * @author Matias Aguirre <maguirre@matware.com.ar>
 * @link http://www.matware.com.ar
@@ -46,8 +46,8 @@ class SimulateLogin extends JApplicationCli
 	 * @return	none
 	 * @since	2.5.0
 	 */
-  public function execute()
-  {
+	public function execute()
+	{
 		// Get the JHttp object
 		$http = JHttpFactory::getHttp($this->params, 'curl');
 		// Get the url to see if we are logged
