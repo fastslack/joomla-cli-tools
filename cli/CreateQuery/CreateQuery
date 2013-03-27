@@ -1,0 +1,88 @@
+#!/usr/bin/php
+<?php
+/**
+* JoomlaCliTools
+*
+* @version $Id$
+* @package MatWare
+* @subpackage JoomlaCliTools
+* @copyright Copyright 2004 - 2013 Matias Aguire. All rights reserved.
+* @license GNU General Public License version 2 or later.
+* @author Matias Aguirre <maguirre@matware.com.ar>
+* @link http://www.matware.com.ar
+*/
+// We are a valid Joomla entry point.
+define('_JEXEC', 1);
+
+// Setup the base path related constant.
+define('JPATH_BASE', dirname(__FILE__));
+
+// Bootstrap the application.
+require dirname(dirname(dirname(__FILE__))).'/bootstrap.php';
+
+class CreateQuery extends JApplicationCli
+{
+	/**
+	* Class constructor.
+	*
+	* @return void
+	*
+	* @since 2.5.0
+	*/
+	public function __construct()
+	{
+		// Call the parent __construct method so it bootstraps the application class.
+		parent::__construct();
+	
+		// Getting the parameters
+		$this->params = new JRegistry(new JConfig);
+
+		// Creating first dabatase instance
+		$this->_db = JFactory::getDBO();
+	}
+
+	/**
+	 * Execute
+	 *
+	 * @return	none
+	 * @since	2.5.0
+	 */
+	public function execute()
+	{
+		/*
+		 * Getting the first table columns and create a query field
+		 */
+		$query = "SHOW COLUMNS FROM {$this->get('table')}";
+		$this->_db->setQuery( $query );
+		$columns = $this->_db->loadObjectList();
+
+		$output = "( ";
+
+		$count = count($columns);
+		for($i=0;$i<$count;$i++) {
+			$output .= "`".$columns[$i]->Field."`";
+
+			$output .= ($i != $count-1) ? ", " : "";
+		}
+
+		$output .= " )\n";
+
+		echo $output;
+
+	} // end method
+
+} // end class
+
+// Wrap the execution in a try statement to catch any exceptions thrown anywhere in the script.
+try
+{
+	// Instantiate the application object, passing the class name to JCli::getInstance
+	// and use chaining to execute the application.
+	JApplicationCli::getInstance('CreateQuery')->execute();
+}
+catch (Exception $e)
+{
+	// An exception has been caught, just echo the message.
+	fwrite(STDOUT, $e->getMessage() . "\n");
+	exit($e->getCode());
+}
