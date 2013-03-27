@@ -1,15 +1,16 @@
 #!/usr/bin/php
 <?php
 /**
- * @version		    $Id: 
- * @package		    Matware
- * @subpackage	  JoomlaCliTools
- * @copyright			CopyRight 2004-2013 Matware All rights reserved.
- * @author				Matias Aguirre
- * @email   			maguirre@matware.com.ar
- * @link					http://www.matware.com.ar/
- * @license				GNU/GPL http://www.gnu.org/licenses/gpl-3.0-standalone.html
- */
+* JoomlaCliTools
+*
+* @version $Id$
+* @package MatWare
+*	@subpackage JoomlaCliTools
+*	@copyright Copyright 2004 - 2013 Matias Aguire. All rights reserved.
+* @license GNU General Public License version 2 or later.
+* @author Matias Aguirre <maguirre@matware.com.ar>
+* @link http://www.matware.com.ar
+*/
 // We are a valid Joomla entry point.
 define('_JEXEC', 1);
 
@@ -40,7 +41,7 @@ class SimulateLogin extends JApplicationCli
 
 
 	/**
-	 * execute
+	 * Execute
 	 *
 	 * @return	none
 	 * @since	2.5.0

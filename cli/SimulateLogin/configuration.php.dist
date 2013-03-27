@@ -1,14 +1,15 @@
 <?php
 /**
- * @version		    $Id: 
- * @package		    Matware
- * @subpackage	  JoomlaCliTools
- * @copyright			CopyRight 2004-2013 Matware All rights reserved.
- * @author				Matias Aguirre
- * @email   			maguirre@matware.com.ar
- * @link					http://www.matware.com.ar/
- * @license				GNU/GPL http://www.gnu.org/licenses/gpl-3.0-standalone.html
- */
+* JoomlaCliTools
+*
+* @version $Id$
+* @package MatWare
+*	@subpackage JoomlaCliTools
+*	@copyright Copyright 2004 - 2013 Matias Aguire. All rights reserved.
+* @license GNU General Public License version 2 or later.
+* @author Matias Aguirre <maguirre@matware.com.ar>
+* @link http://www.matware.com.ar
+*/
 
 // Prevent direct access to this file outside of a calling application.
 defined('_JEXEC') or die;
