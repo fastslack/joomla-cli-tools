@@ -34,7 +34,8 @@ final class JConfig
 	public $password = '';
 	public $db = '';
 	public $dbprefix = 'jos_';
-	public $table = '#__categories';
+	// (string) Pattern matching using SQL simple regular expression comparison.
+	public $pattern = '%';
 
 	/**
 	* The second database configuration and table name
@@ -42,11 +43,12 @@ final class JConfig
 	* @var string
 	* @since 1.0
 	*/
-	public $old_dbtype = 'mysqli';
-	public $old_hostname = 'localhost';
-	public $old_username = '';
-	public $old_password = '';
-	public $old_db = '';
-	public $old_dbprefix = 'jos_';
-	public $old_table = '#__categories';
+	public $new_dbtype = 'mysqli';
+	public $new_hostname = 'localhost';
+	public $new_username = '';
+	public $new_password = '';
+	public $new_db = '';
+	public $new_dbprefix = 'jos_';
+	// (string) Pattern matching using SQL simple regular expression comparison.
+	public $new_pattern = '%';
 }
