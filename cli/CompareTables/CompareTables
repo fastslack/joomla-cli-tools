@@ -6,7 +6,7 @@
 * @version $Id$
 * @package JoomlaCliTools
 * @subpackage CompareTables
-* @copyright Copyright 2004 - 2013 Matias Aguire. All rights reserved.
+* @copyright Copyright 2004 - 2013 Matias Aguirre. All rights reserved.
 * @license GNU General Public License version 2 or later.
 * @author Matias Aguirre <maguirre@matware.com.ar>
 * @link http://www.matware.com.ar
@@ -106,7 +106,7 @@ class CompareTables extends JApplicationCli
 			$this->_db->setQuery( $query );
 			$columns1 = $this->_db->loadObjectList();
 
-			$tbl1 = fopen('sql/'.$tables[$y].'.sql', 'wb');
+			$tbl1 = fopen('sql/'.$tables[$y].'.columns', 'wb');
 
 			for($i=0;$i<count($columns1);$i++) {
 				fwrite($tbl1, $columns1[$i]->Field."\n");
@@ -116,10 +116,10 @@ class CompareTables extends JApplicationCli
 			// Getting the new table name
 			$tablename = $new_prefix.str_replace($prefix, "", $tables[$y]);
 
-			if ($this->tableExists ($tablename) === true) {
+			if ( $this->tableExists($tablename) === true) {
 
 				$this->out($this->_colors['RED']);
-				$this->out("-------------------------------------[ {$tablename} ]----------------------------------------------------");
+				$this->out("-------------------------------------[ {$tables[$y]} ]----------------------------------------------------");
 
 				/*
 				 * Getting the second table columns and save it to tmp file
@@ -128,7 +128,7 @@ class CompareTables extends JApplicationCli
 				$this->_db_new->setQuery( $query );
 				$columns2 = $this->_db_new->loadObjectList();
 
-				$tbl2 = fopen('sql/'.$tablename.'.sql', 'wb');
+				$tbl2 = fopen('sql/'.$tablename.'.columns', 'wb');
 
 				for($i=0;$i<count($columns2);$i++) {
 					fwrite($tbl2, $columns2[$i]->Field."\n");
@@ -136,12 +136,23 @@ class CompareTables extends JApplicationCli
 				fclose($tbl2);
 
 				/*
-				 * Return the diffences
+				 * Return the differences
 				 */
 				$this->out($this->_colors['CYAN']);
 
-				$command = 'diff -Nru sql/'.$tables[$y].'.sql sql/'.$tablename.'.sql';
+				$command = 'diff -Nru sql/'.$tables[$y].'.columns sql/'.$tablename.'.columns';
 				system($command);
+
+			}else{
+
+				$this->out($this->_colors['RED']);
+				$this->out("-------------------------------------[ {$tables[$y]} ]----------------------------------------------------");
+
+				$this->out($this->_colors['CYAN']);
+
+				$command = 'diff -Nru /dev/null sql/'.$tables[$y].'.columns';
+				system($command);
+
 			}
 
 		}
