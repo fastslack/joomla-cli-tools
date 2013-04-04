@@ -23,6 +23,27 @@ defined('_JEXEC') or die;
 final class JConfig
 {
 	/**
+	* Show the table differences
+	* @since 1.0
+	*/
+	public $show_tables_diff = false;
+	/**
+	* Allow to compare the empty tables
+	* @since 1.0
+	*/
+	public $allow_tables_empty = false;
+	/**
+	* Create the ALTER sql query
+	* @since 1.0
+	*/
+	public $create_alter_query = true;
+	/**
+	* Create the jUpgradePro function
+	* @since 1.0
+	*/
+	public $create_jupgradepro_function = true;
+
+	/**
 	* The first database configuration and table name
 	*
 	* @var string

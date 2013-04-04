@@ -87,17 +87,26 @@ class CompareTables extends JApplicationCli
 	 */
 	public function execute()
 	{
-
+		// Getting the pattern and split with the prefix
 		$pattern = $this->get('dbprefix').$this->get('pattern');
 		$new_pattern = $this->get('new_dbprefix').$this->get('new_pattern');
 
+		// Getting the tables array
 		$tables = $this->getTables($this->_db, $pattern);
 		$new_tables = $this->getTables($this->_db_new, $new_pattern);
 
+		// Getting the prefix with the component name too
 		$prefix = (substr($pattern, -1) == '%') ? substr_replace($pattern, "_", -1) : $pattern."_";
 		$new_prefix = (substr($new_pattern, -1) == '%') ? substr_replace($new_pattern, "_", -1) : $new_pattern."_";
 
+		// Getting the variable to show the table on stdin
+		$show_tables_diff = ($this->get('show_tables_diff') === true) ? '&' : '';
+
 		for ($y=0;$y<count($tables);$y++) {
+
+			// Removing the prefix of the table
+			$table_without_prefix = str_replace($this->get('dbprefix'), "", $tables[$y]);
+			$table_without_prefix_and_name = str_replace($prefix, "", $tables[$y]);
 
 			/*
 			 * Getting the first table columns and save it to tmp file
@@ -114,7 +123,7 @@ class CompareTables extends JApplicationCli
 			fclose($tbl1);
 
 			// Getting the new table name
-			$tablename = $new_prefix.str_replace($prefix, "", $tables[$y]);
+			$tablename = $new_prefix.$table_without_prefix_and_name;
 
 			if ( $this->tableExists($tablename) === true) {
 
@@ -140,24 +149,126 @@ class CompareTables extends JApplicationCli
 				 */
 				$this->out($this->_colors['CYAN']);
 
-				$command = 'diff -Nru sql/'.$tables[$y].'.columns sql/'.$tablename.'.columns';
+				$command = 'diff -Nru sql/'.$tables[$y].'.columns sql/'.$tablename.'.columns '.$show_tables_diff.'> sql/'.$tables[$y].'.diff';
 				system($command);
 
-			}else{
+			}else if ($this->get('show_tables_empty') === true) {
 
 				$this->out($this->_colors['RED']);
 				$this->out("-------------------------------------[ {$tables[$y]} ]----------------------------------------------------");
 
 				$this->out($this->_colors['CYAN']);
 
-				$command = 'diff -Nru /dev/null sql/'.$tables[$y].'.columns';
+				$command = 'diff -Nru /dev/null sql/'.$tables[$y].'.columns '.$show_tables_diff.'> sql/'.$tables[$y].'.diff';
 				system($command);
-
 			}
 
-		}
+		/*
+		 * Creating mysql ALTER query
+		 */
+
+			if ($this->get('create_alter_query') === true && $this->tableExists($tablename) === true) {
+
+				$table = "#__".$table_without_prefix;
+
+				$query = "\t\t\$query = \"ALTER TABLE {$table}\"\n";
+
+				$read = JFile::read('sql/'.$tables[$y].'.diff');
+				$read = explode("\n", $read);
+
+				$read_count = count($read);
+
+				$read = array_slice($read, 0, $read_count-1);
+
+
+				$addrop = $unset = '';
+
+				for($i=3;$i<$read_count-1;$i++) {
+
+					$line = $read[$i];
+
+					$char = substr($line, 0, 1);
+					$column =  substr($line, 1, strlen($line));
+
+					if ($char == "+" || $char == "-") {
+
+						if ($char == "+") {
+							$addrop .= "\t\t\t.\" ADD `{$column}` longtext NOT NULL";
+						}else if ($char == "-") {
+							$addrop .= "\t\t\t.\" DROP COLUMN `{$column}`";
+							$unset .= "\t\t\tunset(\$row['{$column}']);\n";
+						}
+
+						if ($i == $read_count - 2) {
+							$addrop .= "\";\n";
+						}else{
+							$addrop .= ",\"\n";
+						}
+
+					}
+
+				}
+
+				$alter = "\n{$query}{$addrop}";
+
+				if ($this->get('create_jupgradepro_function') == true) {
+					echo $this->createjUpgradeProFunction($table_without_prefix, $alter, $unset);
+				}else{
+					echo $alter;
+				}
+
+			} // end if
+
+		} // end for
+
+
 
 	} // end method
+
+
+
+
+	/**
+	 * Create the jUpgradePro function to use with the libraries
+	 *
+	 * @param   string   $table     The table fs this function
+	 * @param   string   $alter     The alter query
+	 * @param   string   $unset     The unset functions list
+	 *
+	 * @return  mixed    The return the function body or null if the query failed.
+	 *
+	 * @since   1.0
+	 */
+	public function createjUpgradeProFunction($table, $alter = null, $unset = null) {
+
+		$body = <<<EOD
+	/**
+	 * Custom migrate for {$table} table
+	 *
+	 * @access public
+	 * @return boolean
+	 * @see JTable::check
+	 * @since 1.5
+	 */
+	function dataHook_{$table}(\$rows) {
+		{$alter}
+
+		\$this->_db->setQuery ( \$query );
+		\$this->_db->query ();
+
+		foreach (\$rows as &\$row)
+		{
+			
+{$unset}
+		}
+
+	}
+
+EOD;
+
+		return $body;
+	}
+
 
 	/**
 	 * Set the table using mysql pattern
