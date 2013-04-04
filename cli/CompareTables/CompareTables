@@ -87,6 +87,9 @@ class CompareTables extends JApplicationCli
 	 */
 	public function execute()
 	{
+		// Initialize return
+		$return = "<?php\n\n";
+
 		// Getting the pattern and split with the prefix
 		$pattern = $this->get('dbprefix').$this->get('pattern');
 		$new_pattern = $this->get('new_dbprefix').$this->get('new_pattern');
@@ -104,6 +107,9 @@ class CompareTables extends JApplicationCli
 
 		for ($y=0;$y<count($tables);$y++) {
 
+			//$this->out($this->_colors['RED']);
+			//$this->out("-------------------------------------[ {$tables[$y]} ]----------------------------------------------------");
+
 			// Removing the prefix of the table
 			$table_without_prefix = str_replace($this->get('dbprefix'), "", $tables[$y]);
 			$table_without_prefix_and_name = str_replace($prefix, "", $tables[$y]);
@@ -116,25 +122,17 @@ class CompareTables extends JApplicationCli
 
 			if ( $this->tableExists($tablename) === true) {
 
-				$this->out($this->_colors['RED']);
-				$this->out("-------------------------------------[ {$tables[$y]} ]----------------------------------------------------");
-
 				// Getting the second table columns and save it to tmp file
 				$this->writeColumnsToFile ($this->_db_new, $tablename);
 
 				// Writting the differences to file or/and show it on stdin
-				$this->out($this->_colors['CYAN']);
 				$command = 'diff -Nru sql/'.$tables[$y].'.columns sql/'.$tablename.'.columns '.$show_tables_diff.'> sql/'.$tables[$y].'.diff';
 				system($command);
 
 			// Empty tables
 			}else if ($this->get('show_tables_empty') === true) {
 
-				$this->out($this->_colors['RED']);
-				$this->out("-------------------------------------[ {$tables[$y]} ]----------------------------------------------------");
-
 				// Writting the differences to file or/and show it on stdin
-				$this->out($this->_colors['CYAN']);
 				$command = 'diff -Nru /dev/null sql/'.$tables[$y].'.columns '.$show_tables_diff.'> sql/'.$tables[$y].'.diff';
 				system($command);
 			}
@@ -176,6 +174,8 @@ class CompareTables extends JApplicationCli
 							$addrop .= "\t\t\t.\" ADD `{$column}`";
 						}else if ($char == "-") {
 							$addrop .= "\t\t\t.\" DROP COLUMN `{$column}`";
+							$column = explode(" ", $column);
+							$column = $column[0];
 							$unset .= "\t\t\tunset(\$row['{$column}']);\n";
 						}
 
@@ -192,13 +192,16 @@ class CompareTables extends JApplicationCli
 				$alter = "\n{$query}{$addrop}";
 
 				if ($this->get('create_jupgradepro_function') == true) {
-					echo $this->createjUpgradeProFunction($table_without_prefix, $alter, $unset);
+					$return .= $this->createjUpgradeProFunction($table_without_prefix, $alter, $unset);
 				}else{
-					echo $alter;
+					$return .= $alter;
 				}
 
 			} // end if
+
 		} // end for
+
+		echo $return;
 
 	} // end method
 
@@ -215,32 +218,14 @@ class CompareTables extends JApplicationCli
 	 */
 	public function createjUpgradeProFunction($table, $alter = null, $unset = null) {
 
-		$body = <<<EOD
+		$disable = empty($alter) ? "//" : "";
 
-	/**
-	 * Custom migrate for {$table} table
-	 *
-	 * @param   object   \$rows     The rows objectList object with the data of this table
-	 *
-	 * @return object
-	 *
-	 * @since 1.0
-	 */
-	function dataHook_{$table}(\$rows) {
-		{$alter}
-		\$this->_db->setQuery ( \$query );
-		\$this->_db->query ();
-
-		foreach (\$rows as &\$row)
-		{
-			
-{$unset}
-		}
-
-		return \$rows;
-	}
-
-EOD;
+		// Reading the template
+		$body = JFile::read(JPATH_BASE.'/templates/jupgradepro.method.php');
+		$body = str_replace("{DISABLE}", $disable, $body);
+		$body = str_replace("{TABLE}", $table, $body);
+		$body = str_replace("{ALTER}", $alter, $body);
+		$body = str_replace("{UNSET}", $unset, $body);
 
 		return $body;
 	}
