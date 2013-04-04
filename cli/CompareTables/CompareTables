@@ -109,7 +109,7 @@ class CompareTables extends JApplicationCli
 			$table_without_prefix_and_name = str_replace($prefix, "", $tables[$y]);
 
 			// Getting the first table columns and save it to tmp file
-			$this->writeTablesToFile ($this->_db, $tables[$y]);
+			$this->writeColumnsToFile ($this->_db, $tables[$y]);
 
 			// Getting the new table name
 			$tablename = $new_prefix.$table_without_prefix_and_name;
@@ -120,7 +120,7 @@ class CompareTables extends JApplicationCli
 				$this->out("-------------------------------------[ {$tables[$y]} ]----------------------------------------------------");
 
 				// Getting the second table columns and save it to tmp file
-				$this->writeTablesToFile ($this->_db_new, $tablename);
+				$this->writeColumnsToFile ($this->_db_new, $tablename);
 
 				// Writting the differences to file or/and show it on stdin
 				$this->out($this->_colors['CYAN']);
@@ -139,10 +139,9 @@ class CompareTables extends JApplicationCli
 				system($command);
 			}
 
-		/*
-		 * Creating mysql ALTER query
-		 */
-
+			/*
+			 * Creating mysql ALTER query
+			 */
 			if ($this->get('create_alter_query') === true && $this->tableExists($tablename) === true) {
 
 				// Getting the table with default prefix
@@ -199,10 +198,7 @@ class CompareTables extends JApplicationCli
 				}
 
 			} // end if
-
 		} // end for
-
-
 
 	} // end method
 
@@ -286,15 +282,16 @@ EOD;
 	} // end method
 
 	/**
-	 * Check if table exists
+	 * Write the columns of the table to file
 	 *
-	 * @param   string   $pattern     The table name
+	 * @param   JDatabase   $db     The database instance
+	 * @param   string   $table     The table name
 	 *
-	 * @return  bool    True if exists
+	 * @return  bool    True if ok
 	 *
 	 * @since   1.0
 	 */
-	function writeTablesToFile ($db, $table) { 
+	function writeColumnsToFile ($db, $table) { 
 		/*
 		 * Getting the first table columns and save it to tmp file
 		 */
@@ -310,6 +307,7 @@ EOD;
 		}
 		fclose($tbl);
 
+		return true;
 	} // end method
 
 } // end class
