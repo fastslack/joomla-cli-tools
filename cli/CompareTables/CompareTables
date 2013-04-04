@@ -108,19 +108,8 @@ class CompareTables extends JApplicationCli
 			$table_without_prefix = str_replace($this->get('dbprefix'), "", $tables[$y]);
 			$table_without_prefix_and_name = str_replace($prefix, "", $tables[$y]);
 
-			/*
-			 * Getting the first table columns and save it to tmp file
-			 */
-			$query = "SHOW COLUMNS FROM {$tables[$y]}";
-			$this->_db->setQuery( $query );
-			$columns1 = $this->_db->loadObjectList();
-
-			$tbl1 = fopen('sql/'.$tables[$y].'.columns', 'wb');
-
-			for($i=0;$i<count($columns1);$i++) {
-				fwrite($tbl1, $columns1[$i]->Field."\n");
-			}
-			fclose($tbl1);
+			// Getting the first table columns and save it to tmp file
+			$this->writeTablesToFile ($this->_db, $tables[$y]);
 
 			// Getting the new table name
 			$tablename = $new_prefix.$table_without_prefix_and_name;
@@ -130,35 +119,22 @@ class CompareTables extends JApplicationCli
 				$this->out($this->_colors['RED']);
 				$this->out("-------------------------------------[ {$tables[$y]} ]----------------------------------------------------");
 
-				/*
-				 * Getting the second table columns and save it to tmp file
-				 */
-				$query = "SHOW COLUMNS FROM {$tablename}";
-				$this->_db_new->setQuery( $query );
-				$columns2 = $this->_db_new->loadObjectList();
+				// Getting the second table columns and save it to tmp file
+				$this->writeTablesToFile ($this->_db_new, $tablename);
 
-				$tbl2 = fopen('sql/'.$tablename.'.columns', 'wb');
-
-				for($i=0;$i<count($columns2);$i++) {
-					fwrite($tbl2, $columns2[$i]->Field."\n");
-				}
-				fclose($tbl2);
-
-				/*
-				 * Return the differences
-				 */
+				// Writting the differences to file or/and show it on stdin
 				$this->out($this->_colors['CYAN']);
-
 				$command = 'diff -Nru sql/'.$tables[$y].'.columns sql/'.$tablename.'.columns '.$show_tables_diff.'> sql/'.$tables[$y].'.diff';
 				system($command);
 
+			// Empty tables
 			}else if ($this->get('show_tables_empty') === true) {
 
 				$this->out($this->_colors['RED']);
 				$this->out("-------------------------------------[ {$tables[$y]} ]----------------------------------------------------");
 
+				// Writting the differences to file or/and show it on stdin
 				$this->out($this->_colors['CYAN']);
-
 				$command = 'diff -Nru /dev/null sql/'.$tables[$y].'.columns '.$show_tables_diff.'> sql/'.$tables[$y].'.diff';
 				system($command);
 			}
@@ -169,18 +145,23 @@ class CompareTables extends JApplicationCli
 
 			if ($this->get('create_alter_query') === true && $this->tableExists($tablename) === true) {
 
+				// Getting the table with default prefix
 				$table = "#__".$table_without_prefix;
 
+				// Initialize ALTER query response
 				$query = "\t\t\$query = \"ALTER TABLE {$table}\"\n";
 
+				// Reading the file
 				$read = JFile::read('sql/'.$tables[$y].'.diff');
 				$read = explode("\n", $read);
 
+				// Count the lines
 				$read_count = count($read);
 
+				// Remove the last empty value
 				$read = array_slice($read, 0, $read_count-1);
 
-
+				// Initialize variables
 				$addrop = $unset = '';
 
 				for($i=3;$i<$read_count-1;$i++) {
@@ -193,7 +174,7 @@ class CompareTables extends JApplicationCli
 					if ($char == "+" || $char == "-") {
 
 						if ($char == "+") {
-							$addrop .= "\t\t\t.\" ADD `{$column}` longtext NOT NULL";
+							$addrop .= "\t\t\t.\" ADD `{$column}`";
 						}else if ($char == "-") {
 							$addrop .= "\t\t\t.\" DROP COLUMN `{$column}`";
 							$unset .= "\t\t\tunset(\$row['{$column}']);\n";
@@ -225,9 +206,6 @@ class CompareTables extends JApplicationCli
 
 	} // end method
 
-
-
-
 	/**
 	 * Create the jUpgradePro function to use with the libraries
 	 *
@@ -242,17 +220,18 @@ class CompareTables extends JApplicationCli
 	public function createjUpgradeProFunction($table, $alter = null, $unset = null) {
 
 		$body = <<<EOD
+
 	/**
 	 * Custom migrate for {$table} table
 	 *
-	 * @access public
-	 * @return boolean
-	 * @see JTable::check
-	 * @since 1.5
+	 * @param   object   \$rows     The rows objectList object with the data of this table
+	 *
+	 * @return object
+	 *
+	 * @since 1.0
 	 */
 	function dataHook_{$table}(\$rows) {
 		{$alter}
-
 		\$this->_db->setQuery ( \$query );
 		\$this->_db->query ();
 
@@ -262,6 +241,7 @@ class CompareTables extends JApplicationCli
 {$unset}
 		}
 
+		return \$rows;
 	}
 
 EOD;
@@ -303,6 +283,33 @@ EOD;
 		$tables = $this->_db_new->getTableList();
 
 		return (in_array($table, $tables)) ? true : false;
+	} // end method
+
+	/**
+	 * Check if table exists
+	 *
+	 * @param   string   $pattern     The table name
+	 *
+	 * @return  bool    True if exists
+	 *
+	 * @since   1.0
+	 */
+	function writeTablesToFile ($db, $table) { 
+		/*
+		 * Getting the first table columns and save it to tmp file
+		 */
+		$query = "SHOW COLUMNS FROM {$table}";
+		$db->setQuery( $query );
+		$columns = $db->loadObjectList();
+
+		$tbl = fopen('sql/'.$table.'.columns', 'wb');
+
+		for($i=0;$i<count($columns);$i++) {
+			$null = ($columns[$i]->Null == 'YES') ? 'NULL' : 'NOT NULL';
+			fwrite($tbl, $columns[$i]->Field." ".$columns[$i]->Type." ".$null."\n");
+		}
+		fclose($tbl);
+
 	} // end method
 
 } // end class
