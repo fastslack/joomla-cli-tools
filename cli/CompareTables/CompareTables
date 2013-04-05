@@ -146,7 +146,7 @@ class CompareTables extends JApplicationCli
 				$table = "#__".$table_without_prefix;
 
 				// Initialize ALTER query response
-				$query = "\t\t\$query = \"ALTER TABLE {$table}\"\n";
+				//$query = "\t\t\$query = \"ALTER TABLE {$table}\"\n";
 
 				// Reading the file
 				$read = JFile::read('sql/'.$tables[$y].'.diff');
@@ -160,6 +160,7 @@ class CompareTables extends JApplicationCli
 
 				// Initialize variables
 				$addrop = $unset = '';
+				$disable = true;
 
 				for($i=3;$i<$read_count-1;$i++) {
 
@@ -169,13 +170,16 @@ class CompareTables extends JApplicationCli
 					$column =  substr($line, 1, strlen($line));
 
 					if ($char == "+" || $char == "-") {
+						
+						$disable = false;
 
 						if ($char == "+") {
-							$addrop .= "\t\t\t.\" ADD `{$column}`";
+							$addrop .= "\t\t\t.\" ADD {$column}";
 						}else if ($char == "-") {
-							$addrop .= "\t\t\t.\" DROP COLUMN `{$column}`";
 							$column = explode(" ", $column);
 							$column = $column[0];
+
+							$addrop .= "\t\t\t.\" DROP COLUMN `{$column}`";
 							$unset .= "\t\t\tunset(\$row['{$column}']);\n";
 						}
 
@@ -189,12 +193,10 @@ class CompareTables extends JApplicationCli
 
 				}
 
-				$alter = "\n{$query}{$addrop}";
-
 				if ($this->get('create_jupgradepro_function') == true) {
-					$return .= $this->createjUpgradeProFunction($table_without_prefix, $alter, $unset);
+					$return .= $this->createjUpgradeProFunction($table_without_prefix, $addrop, $unset, $disable);
 				}else{
-					$return .= $alter;
+					$return .= $addrop;
 				}
 
 			} // end if
@@ -216,16 +218,22 @@ class CompareTables extends JApplicationCli
 	 *
 	 * @since   1.0
 	 */
-	public function createjUpgradeProFunction($table, $alter = null, $unset = null) {
+	public function createjUpgradeProFunction($table, $alter = null, $unset = null, $disable = true) {
 
-		$disable = empty($alter) ? "//" : "";
+		$disable = ($disable === true) ? "//" : "";
 
-		// Reading the template
-		$body = JFile::read(JPATH_BASE.'/templates/jupgradepro.method.php');
-		$body = str_replace("{DISABLE}", $disable, $body);
-		$body = str_replace("{TABLE}", $table, $body);
-		$body = str_replace("{ALTER}", $alter, $body);
-		$body = str_replace("{UNSET}", $unset, $body);
+		// Reading the datahook template
+		$structurehook = JFile::read(JPATH_BASE.'/templates/jupgradepro.structurehook.php');
+		$structurehook = str_replace("{DISABLE}", $disable, $structurehook);
+		$structurehook = str_replace("{TABLE}", $table, $structurehook);
+		$structurehook = str_replace("{ALTER}", $alter, $structurehook);
+
+		// Reading the datahook template
+		$datahook = JFile::read(JPATH_BASE.'/templates/jupgradepro.datahook.php');
+		$datahook = str_replace("{TABLE}", $table, $datahook);
+		$datahook = str_replace("{UNSET}", $unset, $datahook);
+
+		$body = $structurehook.$datahook;
 
 		return $body;
 	}

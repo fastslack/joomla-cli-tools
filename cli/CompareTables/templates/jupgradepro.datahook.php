@@ -1,5 +1,5 @@
 	/**
-	 * Custom migrate for {TABLE} table
+	 * Custom data migration for {TABLE} table
 	 *
 	 * @param   object   $rows     The rows objectList object with the data of this table
 	 *
@@ -7,10 +7,7 @@
 	 *
 	 * @since 1.0
 	 */
-	function dataHook_{TABLE}($rows) {
-		{DISABLE}{ALTER}
-		{DISABLE}$this->_db->setQuery ( $query );
-		{DISABLE}$this->_db->query ();
+	function dataHook_{TABLE} ($rows) {
 
 		foreach ($rows as &$row)
 		{
