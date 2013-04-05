@@ -12,4 +12,8 @@
 */
 
 // Import the Joomla! CMS Libraries
-require dirname(dirname(__FILE__)).'/joomla-framework/libraries/import.php';
+require dirname(dirname(__FILE__)).'/joomla-platform/libraries/import.php';
+// Import the database libraries
+jimport('joomla.database.database');
+// Import the file libraries
+jimport('joomla.filesystem.file');

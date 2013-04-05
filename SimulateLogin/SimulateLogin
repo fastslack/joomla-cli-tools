@@ -14,7 +14,6 @@
 // We are a valid Joomla entry point.
 define('_JEXEC', 1);
 
-
 // Setup the base path related constant.
 define('JPATH_BASE', dirname(__FILE__));
 
