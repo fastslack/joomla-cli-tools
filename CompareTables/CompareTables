@@ -145,9 +145,6 @@ class CompareTables extends JApplicationCli
 				// Getting the table with default prefix
 				$table = "#__".$table_without_prefix;
 
-				// Initialize ALTER query response
-				//$query = "\t\t\$query = \"ALTER TABLE {$table}\"\n";
-
 				// Reading the file
 				$read = JFile::read('sql/'.$tables[$y].'.diff');
 				$read = explode("\n", $read);
@@ -159,6 +156,7 @@ class CompareTables extends JApplicationCli
 				$read = array_slice($read, 0, $read_count-1);
 
 				// Initialize variables
+				$modif_array = array();
 				$addrop = $unset = '';
 				$disable = true;
 
@@ -167,31 +165,79 @@ class CompareTables extends JApplicationCli
 					$line = $read[$i];
 
 					$char = substr($line, 0, 1);
+
 					$column =  substr($line, 1, strlen($line));
+					$column = explode(" ", $column);
+					$col_name = $column[0];
+					$col_type = $column[1];
+					$col_null = $column[2];
+					$col_null = (isset($column[3])) ? "{$column[2]} {$column[3]}" : $column[2];
 
-					if ($char == "+" || $char == "-") {
-						
+					// Search
+					if ($char == "-") {
+
 						$disable = false;
+						$modif = false;
 
-						if ($char == "+") {
-							$addrop .= "\t\t\t.\" ADD {$column}";
-						}else if ($char == "-") {
-							$column = explode(" ", $column);
-							$column = $column[0];
+						// Check if is a modify of column
+						for($e=3;$e<$read_count-1;$e++) {
 
-							$addrop .= "\t\t\t.\" DROP COLUMN `{$column}`";
-							$unset .= "\t\t\tunset(\$row->{$column});\n";
+							$line_mod = $read[$e];
+
+							$char_mod = substr($line_mod, 0, 1);
+
+							$column_mod =  substr($line_mod, 1, strlen($line_mod));
+							$column_mod = explode(" ", $column_mod);
+							$col_name_mod = $column_mod[0];
+							$col_type_mod = $column_mod[1];
+							$col_null_mod = (isset($column_mod[3])) ? "{$column_mod[2]} {$column_mod[3]}" : $column_mod[2];
+
+							if ($char_mod == "+") {
+								if($col_name_mod == $col_name) {
+
+									$modif_array[] = $col_name;
+
+									$addrop .= "\t\t\t.\" MODIFY `{$col_name}` {$col_type_mod} {$col_null_mod}";
+								}
+							}
+
+						} // end for
+
+						if (count($modif_array) == 0) {
+							$addrop .= "\t\t\t.\" DROP COLUMN `{$col_name}`";
+							$unset .= "\t\t\tunset(\$row->{$col_name});\n";
 						}
 
+					} // end if
+
+					if ($char == "+") {
+
+						$disable = false;
+
+						if (!in_array($col_name, $modif_array)) {
+							$addrop .= "\t\t\t.\" ADD `{$col_name}` {$col_type} {$col_null}";
+						}
+
+					} // end if 
+
+
+					if ($char == "-" && (in_array($col_name, $modif_array) || count($modif_array) == 0) ) {
 						if ($i == $read_count - 2) {
 							$addrop .= "\";\n";
 						}else{
 							$addrop .= ",\"\n";
 						}
-
 					}
 
-				}
+					if ( $char == "+" && !in_array($col_name, $modif_array)) {
+						if ($i == $read_count - 2) {
+							$addrop .= "\";\n";
+						}else{
+							$addrop .= ",\"\n";
+						}
+					}
+
+				} // end for
 
 				if ($disable === false) {
 					if ($this->get('create_jupgradepro_function') == true) {
