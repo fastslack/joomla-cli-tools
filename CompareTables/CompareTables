@@ -18,7 +18,7 @@ define('_JEXEC', 1);
 define('JPATH_BASE', dirname(__FILE__));
 
 // Bootstrap the application.
-require dirname(dirname(dirname(__FILE__))).'/bootstrap.php';
+require dirname(dirname(__FILE__)).'/bootstrap.php';
 
 class CompareTables extends JApplicationCli
 {
@@ -180,7 +180,7 @@ class CompareTables extends JApplicationCli
 							$column = $column[0];
 
 							$addrop .= "\t\t\t.\" DROP COLUMN `{$column}`";
-							$unset .= "\t\t\tunset(\$row['{$column}']);\n";
+							$unset .= "\t\t\tunset(\$row->{$column});\n";
 						}
 
 						if ($i == $read_count - 2) {
@@ -193,10 +193,12 @@ class CompareTables extends JApplicationCli
 
 				}
 
-				if ($this->get('create_jupgradepro_function') == true) {
-					$return .= $this->createjUpgradeProFunction($table_without_prefix, $addrop, $unset, $disable);
-				}else{
-					$return .= $addrop;
+				if ($disable === false) {
+					if ($this->get('create_jupgradepro_function') == true) {
+						$return .= $this->createjUpgradeProFunction($table_without_prefix, $addrop, $unset, $disable);
+					}else{
+						$return .= $addrop;
+					}
 				}
 
 			} // end if
@@ -233,7 +235,8 @@ class CompareTables extends JApplicationCli
 		$datahook = str_replace("{TABLE}", $table, $datahook);
 		$datahook = str_replace("{UNSET}", $unset, $datahook);
 
-		$body = $structurehook.$datahook;
+		$body = ($disable === true) ? '' : $structurehook;
+		$body .= ($disable === true) ? '' : $datahook;
 
 		return $body;
 	}
