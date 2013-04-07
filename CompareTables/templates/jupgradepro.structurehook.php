@@ -7,7 +7,7 @@
 	 */
 	function structureHook_{TABLE} () {
 
-		{DISABLE}$query = "ALTER TABLE #__{TABLE}"
+		{DISABLE}$query = "ALTER TABLE #__{ALTER_TABLE}"
 {ALTER}
 		{DISABLE}$this->_db->setQuery ( $query );
 		{DISABLE}$this->_db->query ();

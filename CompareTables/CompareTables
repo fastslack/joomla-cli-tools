@@ -142,9 +142,6 @@ class CompareTables extends JApplicationCli
 			 */
 			if ($this->get('create_alter_query') === true && $this->tableExists($tablename) === true) {
 
-				// Getting the table with default prefix
-				$table = "#__".$table_without_prefix;
-
 				// Reading the file
 				$read = JFile::read('sql/'.$tables[$y].'.diff');
 				$read = explode("\n", $read);
@@ -205,7 +202,7 @@ class CompareTables extends JApplicationCli
 
 						if (count($modif_array) == 0) {
 							$addrop .= "\t\t\t.\" DROP COLUMN `{$col_name}`";
-							$unset .= "\t\t\tunset(\$row->{$col_name});\n";
+							$unset .= "\t\t\tunset(\$row['{$col_name}']);\n";
 						}
 
 					} // end if
@@ -229,7 +226,7 @@ class CompareTables extends JApplicationCli
 						}
 					}
 
-					if ( $char == "+" && !in_array($col_name, $modif_array)) {
+					if ( $char == "+" && !in_array($col_name, $modif_array) ) {
 						if ($i == $read_count - 2) {
 							$addrop .= "\";\n";
 						}else{
@@ -241,7 +238,10 @@ class CompareTables extends JApplicationCli
 
 				if ($disable === false) {
 					if ($this->get('create_jupgradepro_function') == true) {
-						$return .= $this->createjUpgradeProFunction($table_without_prefix, $addrop, $unset, $disable);
+
+						$alter_table = str_replace($this->get('new_dbprefix'), "", $new_prefix).$table_without_prefix_and_name;
+
+						$return .= $this->createjUpgradeProFunction($table_without_prefix, $alter_table, $addrop, $unset, $disable);
 					}else{
 						$return .= $addrop;
 					}
@@ -266,14 +266,15 @@ class CompareTables extends JApplicationCli
 	 *
 	 * @since   1.0
 	 */
-	public function createjUpgradeProFunction($table, $alter = null, $unset = null, $disable = true) {
+	public function createjUpgradeProFunction($table, $alter_table, $alter = null, $unset = null, $disable = true) {
 
 		$disable = ($disable === true) ? "//" : "";
 
-		// Reading the datahook template
+		// Reading the structurehook template
 		$structurehook = JFile::read(JPATH_BASE.'/templates/jupgradepro.structurehook.php');
 		$structurehook = str_replace("{DISABLE}", $disable, $structurehook);
 		$structurehook = str_replace("{TABLE}", $table, $structurehook);
+		$structurehook = str_replace("{ALTER_TABLE}", $alter_table, $structurehook);
 		$structurehook = str_replace("{ALTER}", $alter, $structurehook);
 
 		// Reading the datahook template

@@ -11,6 +11,7 @@
 
 		foreach ($rows as &$row)
 		{
+			$row = (array) $row;
 			
 {UNSET}
 		}
