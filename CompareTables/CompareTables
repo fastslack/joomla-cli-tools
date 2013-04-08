@@ -160,18 +160,10 @@ class CompareTables extends JApplicationCli
 				for($i=3;$i<$read_count-1;$i++) {
 
 					$line = $read[$i];
-
-					$char = substr($line, 0, 1);
-
-					$column =  substr($line, 1, strlen($line));
-					$column = explode(" ", $column);
-					$col_name = $column[0];
-					$col_type = $column[1];
-					$col_null = $column[2];
-					$col_null = (isset($column[3])) ? "{$column[2]} {$column[3]}" : $column[2];
+					$values = $this->stripLine($line);
 
 					// Search
-					if ($char == "-") {
+					if ($values['char'] == "-") {
 
 						$disable = false;
 						$modif = false;
@@ -180,45 +172,38 @@ class CompareTables extends JApplicationCli
 						for($e=3;$e<$read_count-1;$e++) {
 
 							$line_mod = $read[$e];
+							$values_mod = $this->stripLine($line_mod);
 
-							$char_mod = substr($line_mod, 0, 1);
+							if ($values_mod['char'] == "+") {
+								if($values_mod['col_name'] == $values['col_name']) {
 
-							$column_mod =  substr($line_mod, 1, strlen($line_mod));
-							$column_mod = explode(" ", $column_mod);
-							$col_name_mod = $column_mod[0];
-							$col_type_mod = $column_mod[1];
-							$col_null_mod = (isset($column_mod[3])) ? "{$column_mod[2]} {$column_mod[3]}" : $column_mod[2];
+									$modif_array[] = $values['col_name'];
 
-							if ($char_mod == "+") {
-								if($col_name_mod == $col_name) {
-
-									$modif_array[] = $col_name;
-
-									$addrop .= "\t\t\t.\" MODIFY `{$col_name}` {$col_type_mod} {$col_null_mod}";
+									$addrop .= "\t\t\t.\" MODIFY `{$values['col_name']}` {$values_mod['col_type']} {$values_mod['col_null']}";
 								}
 							}
 
 						} // end for
 
 						if (count($modif_array) == 0) {
-							$addrop .= "\t\t\t.\" DROP COLUMN `{$col_name}`";
-							$unset .= "\t\t\tunset(\$row['{$col_name}']);\n";
+							$addrop .= "\t\t\t.\" DROP COLUMN `{$values['col_name']}`";
+							$unset .= "\t\t\tunset(\$row['{$values['col_name']}']);\n";
 						}
 
 					} // end if
 
-					if ($char == "+") {
+					if ($values['char'] == "+") {
 
 						$disable = false;
 
-						if (!in_array($col_name, $modif_array)) {
-							$addrop .= "\t\t\t.\" ADD `{$col_name}` {$col_type} {$col_null}";
+						if (!in_array($values['col_name'], $modif_array)) {
+							$addrop .= "\t\t\t.\" ADD `{$values['col_name']}` {$values['col_type']} {$values['col_null']}";
 						}
 
 					} // end if 
 
 
-					if ($char == "-" && (in_array($col_name, $modif_array) || count($modif_array) == 0) ) {
+					if ($values['char'] == "-" && (in_array($values['col_name'], $modif_array) || count($modif_array) == 0) ) {
 						if ($i == $read_count - 2) {
 							$addrop .= "\";\n";
 						}else{
@@ -226,7 +211,7 @@ class CompareTables extends JApplicationCli
 						}
 					}
 
-					if ( $char == "+" && !in_array($col_name, $modif_array) ) {
+					if ( $values['char'] == "+" && !in_array($values['col_name'], $modif_array) ) {
 						if ($i == $read_count - 2) {
 							$addrop .= "\";\n";
 						}else{
@@ -241,7 +226,7 @@ class CompareTables extends JApplicationCli
 
 						$alter_table = str_replace($this->get('new_dbprefix'), "", $new_prefix).$table_without_prefix_and_name;
 
-						$return .= $this->createjUpgradeProFunction($table_without_prefix, $alter_table, $addrop, $unset, $disable);
+						$return .= $this->createjUpgradeProMethods($table_without_prefix, $alter_table, $addrop, $unset, $disable);
 					}else{
 						$return .= $addrop;
 					}
@@ -266,7 +251,7 @@ class CompareTables extends JApplicationCli
 	 *
 	 * @since   1.0
 	 */
-	public function createjUpgradeProFunction($table, $alter_table, $alter = null, $unset = null, $disable = true) {
+	public function createjUpgradeProMethods($table, $alter_table, $alter = null, $unset = null, $disable = true) {
 
 		$disable = ($disable === true) ? "//" : "";
 
@@ -288,6 +273,29 @@ class CompareTables extends JApplicationCli
 		return $body;
 	}
 
+	/**
+	 * Strip the line to get the different values
+	 *
+	 * @param   JDatabase   $db     Database connector class.
+	 *
+	 * @return  mixed    The return array or null if failed.
+	 *
+	 * @since   1.0
+	 */
+	public function stripLine($line) {
+
+		$return = array();
+
+		$return['char'] = substr($line, 0, 1);
+
+		$column =  substr($line, 1, strlen($line));
+		$column = explode(" ", $column);
+		$return['col_name'] = $column[0];
+		$return['col_type'] = $column[1];
+		$return['col_null'] = (isset($column[3])) ? "{$column[2]} {$column[3]}" : $column[2];
+
+		return $return;
+	}
 
 	/**
 	 * Set the table using mysql pattern
