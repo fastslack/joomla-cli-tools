@@ -87,9 +87,6 @@ class CompareTables extends JApplicationCli
 	 */
 	public function execute()
 	{
-		// Initialize return
-		$return = "<?php\n\n";
-
 		// Getting the pattern and split with the prefix
 		$pattern = $this->get('dbprefix').$this->get('pattern');
 		$new_pattern = $this->get('new_dbprefix').$this->get('new_pattern');
@@ -105,10 +102,10 @@ class CompareTables extends JApplicationCli
 		// Getting the variable to show the table on stdin
 		$show_tables_diff = ($this->get('show_tables_diff') === true) ? '&' : '';
 
-		for ($y=0;$y<count($tables);$y++) {
+		// Initialize return
+		$return = "<?php\n\n";
 
-			//$this->out($this->_colors['RED']);
-			//$this->out("-------------------------------------[ {$tables[$y]} ]----------------------------------------------------");
+		for ($y=0;$y<count($tables);$y++) {
 
 			// Removing the prefix of the table
 			$table_without_prefix = str_replace($this->get('dbprefix'), "", $tables[$y]);
@@ -175,7 +172,8 @@ class CompareTables extends JApplicationCli
 							$values_mod = $this->stripLine($line_mod);
 
 							if ($values_mod['char'] == "+") {
-								if($values_mod['col_name'] == $values['col_name']) {
+
+								if($values_mod['col_name'] == $values['col_name'] && $values_mod['col_type'] != $values['col_type']) {
 
 									$modif_array[] = $values['col_name'];
 
@@ -185,31 +183,41 @@ class CompareTables extends JApplicationCli
 
 						} // end for
 
-						if (count($modif_array) == 0) {
-							$addrop .= "\t\t\t.\" DROP COLUMN `{$values['col_name']}`";
+						if (!in_array($values['col_name'], $modif_array)) {
+							$addrop .= "\t\t\t.\" DROP COLUMN `{$values['col_name']}`,\"\n";
 							$unset .= "\t\t\tunset(\$row['{$values['col_name']}']);\n";
+						}
+
+						if ($values['char'] == "-" && (in_array($values['col_name'], $modif_array)) ) {
+							if ($i == $read_count - 2) {
+								$addrop .= "\";\n";
+							}else{
+								$addrop .= ",\"\n";
+							}
 						}
 
 					} // end if
 
+				} // end for
+
+
+				$added = false;
+
+				for($i=3;$i<$read_count-1;$i++) {
+
+					$line = $read[$i];
+					$values = $this->stripLine($line);
+
 					if ($values['char'] == "+") {
 
 						$disable = false;
+						$added = true;
 
 						if (!in_array($values['col_name'], $modif_array)) {
 							$addrop .= "\t\t\t.\" ADD `{$values['col_name']}` {$values['col_type']} {$values['col_null']}";
 						}
 
 					} // end if 
-
-
-					if ($values['char'] == "-" && (in_array($values['col_name'], $modif_array) || count($modif_array) == 0) ) {
-						if ($i == $read_count - 2) {
-							$addrop .= "\";\n";
-						}else{
-							$addrop .= ",\"\n";
-						}
-					}
 
 					if ( $values['char'] == "+" && !in_array($values['col_name'], $modif_array) ) {
 						if ($i == $read_count - 2) {
@@ -220,6 +228,11 @@ class CompareTables extends JApplicationCli
 					}
 
 				} // end for
+
+				if ($added == false) {
+					$addrop = substr($addrop, 0, -3);
+					$addrop .= "\";\n";
+				}
 
 				if ($disable === false) {
 					if ($this->get('create_jupgradepro_function') == true) {
@@ -276,7 +289,7 @@ class CompareTables extends JApplicationCli
 	/**
 	 * Strip the line to get the different values
 	 *
-	 * @param   JDatabase   $db     Database connector class.
+	 * @param   string   $line     The line value
 	 *
 	 * @return  mixed    The return array or null if failed.
 	 *
