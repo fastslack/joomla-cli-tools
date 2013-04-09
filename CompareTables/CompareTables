@@ -23,6 +23,12 @@ require dirname(dirname(__FILE__)).'/bootstrap.php';
 class CompareTables extends JApplicationCli
 {
 	/**
+	* The return string
+	* @since 1.0
+	*/
+	public $_return = '';
+
+	/**
 	* Ascii color array
 	*
 	* @var array
@@ -87,52 +93,26 @@ class CompareTables extends JApplicationCli
 	 */
 	public function execute()
 	{
-		// Getting the pattern and split with the prefix
-		$pattern = $this->get('dbprefix').$this->get('pattern');
-		$new_pattern = $this->get('new_dbprefix').$this->get('new_pattern');
+		// Getting the prefixes
+		$prefixes = $this->_getPrefixes();
 
 		// Getting the tables array
-		$tables = $this->getTables($this->_db, $pattern);
-		$new_tables = $this->getTables($this->_db_new, $new_pattern);
-
-		// Getting the prefix with the component name too
-		$prefix = (substr($pattern, -1) == '%') ? substr_replace($pattern, "_", -1) : $pattern."_";
-		$new_prefix = (substr($new_pattern, -1) == '%') ? substr_replace($new_pattern, "_", -1) : $new_pattern."_";
-
-		// Getting the variable to show the table on stdin
-		$show_tables_diff = ($this->get('show_tables_diff') === true) ? '&' : '';
-
-		// Initialize return
-		$return = "<?php\n\n";
+		$tables = $this->getTables($this->_db, $prefixes['pattern']);
+		$new_tables = $this->getTables($this->_db_new, $prefixes['pattern_new']);
 
 		for ($y=0;$y<count($tables);$y++) {
 
 			// Removing the prefix of the table
 			$table_without_prefix = str_replace($this->get('dbprefix'), "", $tables[$y]);
-			$table_without_prefix_and_name = str_replace($prefix, "", $tables[$y]);
+			$table_without_prefix_and_name = str_replace($prefixes['prefix'], "", $tables[$y]);
+
+			// Getting the new table name
+			$tablename = $prefixes['prefix_new'].$table_without_prefix_and_name;
 
 			// Getting the first table columns and save it to tmp file
 			$this->writeColumnsToFile ($this->_db, $tables[$y]);
-
-			// Getting the new table name
-			$tablename = $new_prefix.$table_without_prefix_and_name;
-
-			if ( $this->tableExists($tablename) === true) {
-
-				// Getting the second table columns and save it to tmp file
-				$this->writeColumnsToFile ($this->_db_new, $tablename);
-
-				// Writting the differences to file or/and show it on stdin
-				$command = 'diff -Nru sql/'.$tables[$y].'.columns sql/'.$tablename.'.columns '.$show_tables_diff.'> sql/'.$tables[$y].'.diff';
-				system($command);
-
-			// Empty tables
-			}else if ($this->get('show_tables_empty') === true) {
-
-				// Writting the differences to file or/and show it on stdin
-				$command = 'diff -Nru /dev/null sql/'.$tables[$y].'.columns '.$show_tables_diff.'> sql/'.$tables[$y].'.diff';
-				system($command);
-			}
+			// Creating the diff files
+			$this->createDiff($tables[$y]);
 
 			/*
 			 * Creating mysql ALTER query
@@ -237,11 +217,11 @@ class CompareTables extends JApplicationCli
 				if ($disable === false) {
 					if ($this->get('create_jupgradepro_function') == true) {
 
-						$alter_table = str_replace($this->get('new_dbprefix'), "", $new_prefix).$table_without_prefix_and_name;
+						$alter_table = str_replace($this->get('new_dbprefix'), "", $prefixes['prefix_new']).$table_without_prefix_and_name;
 
-						$return .= $this->createjUpgradeProMethods($table_without_prefix, $alter_table, $addrop, $unset, $disable);
+						$this->_return .= $this->createMethods($table_without_prefix, $alter_table, $addrop, $unset, $disable);
 					}else{
-						$return .= $addrop;
+						$this->_return .= $addrop;
 					}
 				}
 
@@ -249,12 +229,12 @@ class CompareTables extends JApplicationCli
 
 		} // end for
 
-		echo $return;
+		echo (!empty($this->_return)) ? "<?php\n".$this->_return : "";
 
 	} // end method
 
 	/**
-	 * Create the jUpgradePro function to use with the libraries
+	 * Create the jUpgradePro methods to use with the libraries
 	 *
 	 * @param   string   $table     The table fs this function
 	 * @param   string   $alter     The alter query
@@ -264,7 +244,7 @@ class CompareTables extends JApplicationCli
 	 *
 	 * @since   1.0
 	 */
-	public function createjUpgradeProMethods($table, $alter_table, $alter = null, $unset = null, $disable = true) {
+	public function createMethods($table, $alter_table, $alter = null, $unset = null, $disable = true) {
 
 		$disable = ($disable === true) ? "//" : "";
 
@@ -287,6 +267,48 @@ class CompareTables extends JApplicationCli
 	}
 
 	/**
+	 * Compare and create the diff files for table
+	 *
+	 * @param   string   $table     The table to compare
+	 *
+	 * @return  mixed    The return array or null if failed.
+	 *
+	 * @since   1.0
+	 */
+	public function createDiff($table) {
+
+		// Getting the prefixes
+		$prefixes = $this->_getPrefixes();
+
+		// Removing the prefix of the table
+		$table_without_prefix = str_replace($this->get('dbprefix'), "", $table);
+		$table_without_prefix_and_name = str_replace($prefixes['prefix'], "", $table);
+
+		// Getting the new table name
+		$tablename = $prefixes['prefix_new'].$table_without_prefix_and_name;
+
+		// Getting the variable to show the table on stdin
+		$show_tables_diff = ($this->get('show_tables_diff') === true) ? '&' : '';
+
+		if ( $this->tableExists($tablename) === true) {
+
+			// Getting the second table columns and save it to tmp file
+			$this->writeColumnsToFile ($this->_db_new, $tablename);
+
+			// Writting the differences to file or/and show it on stdin
+			$command = 'diff -Nru sql/'.$table.'.columns sql/'.$tablename.'.columns '.$show_tables_diff.'> sql/'.$table.'.diff';
+			system($command);
+
+		// Empty tables
+		}else if ($this->get('show_tables_empty') === true) {
+
+			// Writting the differences to file or/and show it on stdin
+			$command = 'diff -Nru /dev/null sql/'.$table.'.columns '.$show_tables_diff.'> sql/'.$table.'.diff';
+			system($command);
+		}
+	}
+
+	/**
 	 * Strip the line to get the different values
 	 *
 	 * @param   string   $line     The line value
@@ -306,6 +328,28 @@ class CompareTables extends JApplicationCli
 		$return['col_name'] = $column[0];
 		$return['col_type'] = $column[1];
 		$return['col_null'] = (isset($column[3])) ? "{$column[2]} {$column[3]}" : $column[2];
+
+		return $return;
+	}
+
+	/**
+	 * Strip the line to get the different values
+	 *
+	 * @return  array    The return array or null if failed.
+	 *
+	 * @since   1.0
+	 */
+	public function _getPrefixes() {
+
+		$return = array();
+
+		// Getting the pattern and split with the prefix
+		$return['pattern'] = $this->get('dbprefix').$this->get('pattern');
+		$return['pattern_new'] = $this->get('new_dbprefix').$this->get('new_pattern');
+
+		// Getting the prefix with the component name too
+		$return['prefix'] = (substr($return['pattern'], -1) == '%') ? substr_replace($return['pattern'], "", -1) : $return['pattern'];
+		$return['prefix_new'] = (substr($return['pattern_new'], -1) == '%') ? substr_replace($return['pattern_new'], "", -1) : $return['pattern_new'];
 
 		return $return;
 	}
