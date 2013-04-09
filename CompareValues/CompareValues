@@ -1,0 +1,319 @@
+#!/usr/bin/php
+<?php
+/**
+* JoomlaCliTools
+*
+* @version $Id$
+* @package JoomlaCliTools
+* @subpackage CompareValues
+* @copyright Copyright 2004 - 2013 Matias Aguirre. All rights reserved.
+* @license GNU General Public License version 2 or later.
+* @author Matias Aguirre <maguirre@matware.com.ar>
+* @link http://www.matware.com.ar
+*/
+// We are a valid Joomla entry point.
+define('_JEXEC', 1);
+
+// Setup the base path related constant.
+define('JPATH_BASE', dirname(__FILE__));
+
+// Bootstrap the application.
+require dirname(dirname(__FILE__)).'/bootstrap.php';
+
+class CompareValues extends JApplicationCli
+{
+	/**
+	* Ascii color array
+	*
+	* @var array
+	* @since 1.0
+	*/
+	public $_c = array(
+		'LIGHT_RED'   => "\033[1;31m",
+		'LIGHT_GREEN' => "\033[1;32m",
+		'YELLOW'      => "\033[1;33m",
+		'LIGHT_BLUE'  => "\033[1;34m",
+		'MAGENTA'     => "\033[1;35m",
+		'LIGHT_CYAN'  => "\033[1;36m",
+		'WHITE'       => "\033[1;37m",
+		'NORMAL'      => "\033[0m",
+		'BLACK'       => "\033[0;30m",
+		'RED'         => "\033[0;31m",
+		'GREEN'       => "\033[0;32m",
+		'BROWN'       => "\033[0;33m",
+		'BLUE'        => "\033[0;34m",
+		'CYAN'        => "\033[0;36m",
+		'BOLD'        => "\033[1m",
+		'UNDERSCORE'  => "\033[4m",
+		'REVERSE'     => "\033[7m",
+	);
+
+	/**
+	* Class constructor.
+	*
+	* @return void
+	*
+	* @since 2.5.0
+	*/
+	public function __construct()
+	{
+		// Call the parent __construct method so it bootstraps the application class.
+		parent::__construct();
+	
+		// Getting the parameters
+		$this->params = new JRegistry(new JConfig);
+
+		// Creating first dabatase instance
+		$this->_db = JFactory::getDBO();
+
+		// Creating second dabatase instance
+		$this->_db_old = JDatabase::getInstance(
+			array(
+			'driver' => $this->get('old_dbtype'),
+			'host' => $this->get('old_hostname'),
+			'user' => $this->get('old_username'),
+			'password' => $this->get('old_password'),
+			'database' => $this->get('old_db'),
+			'prefix' => $this->get('old_dbprefix'),
+			)
+		);
+
+	}
+
+	/**
+	 * Screen
+	 *
+	 * @return	none
+	 * @since	2.5.0
+	 */
+	public function screen()
+	{
+		// Print help
+		$this->out();
+		$this->out(' CompareValues v1.0');
+		$this->out(' Usage: CompareValues [--backup] [--diff-count] [--diff-values]');
+		$this->out();
+		$this->out(' Author: Matias Aguirre (maguirre@matware.com.ar)');
+		$this->out(' License: GNU/GPL http://www.gnu.org/licenses/gpl-2.0-standalone.html');
+		$this->out();
+		exit;
+	}
+
+	/**
+	 * Execute
+	 *
+	 * @since	1.0
+	 */
+	public function execute()
+	{
+		$backup = $this->input->get('backup');
+		$diff = $this->input->get('diff');
+
+		if (empty($backup) && empty($diff)) {
+			$this->screen();
+		}
+
+		if (!empty($backup)) {
+			$this->out("\nWARNING! Remember that your second database will be rewritted! Agree? yes/no");
+			$in = $this->in();
+			if ($in == 'yes') {
+				$this->createBackup();
+			}
+		}
+
+		if (!empty($diff)) {
+			$this->createDiff();
+		}
+
+	} // end method
+
+	/**
+	 * 
+	 *
+	 * @return  null    
+	 *
+	 * @since   1.0
+	 */
+	public function createDiff() {
+
+		// Getting the tables array
+		$tables = $this->_getTables($this->_db);
+
+		// Getting the data from the first database
+		$values = $this->_getMultipleTableValues($this->_db, $tables, 'Getting data from first table');
+		// Getting the data from the second database
+		$values_old = $this->_getMultipleTableValues($this->_db_old, $tables, 'Getting data from second table');
+
+
+		foreach ($tables as $table)
+		{
+			$count = count($values[$table]);
+			$count_old = count($values_old[$table]);
+
+			$alert = ($count != $count_old) ? "{$this->_c['YELLOW']} <== CHANGE!" : "";
+
+			if ($alert != "") {
+				echo " {$this->_c['WHITE']}[{$table}]\n {$this->_c['CYAN']}New:{$count}|Old:{$count_old}{$alert}\n";
+			}
+		}
+
+	}
+
+	/**
+	 * 
+	 *
+	 * @return  null    
+	 *
+	 * @since   1.0
+	 */
+	public function createBackup() {
+
+		// Getting the tables array
+		$tables = $this->_getTables($this->_db);
+
+		// Migrating the structure of the tables
+		$this->_openStep('STRUCTURE');
+		foreach ($tables as $table)
+		{
+			$this->migrateTableStructure($table);
+			echo "•";
+		}
+		$this->_closeStep();
+
+		// Migrating the values of the tables
+		$this->_openStep('VALUES');
+		foreach ($tables as $table)
+		{
+			$this->migrateTableValues($table);
+			echo "•";
+		}
+		$this->_closeStep();
+	}
+
+	/**
+ 	* Get the table structure
+	*/
+	public function migrateTableStructure($table) {
+
+		$result = $this->_db->getTableCreate($table);
+		$structure = "{$result[$table]} ;\n\n";
+
+		// Dropping
+		$drop = "DROP TABLE IF EXISTS `{$table}`";
+		$this->_db_old->setQuery($drop);
+		$this->_db_old->query();
+
+		// Inserting the structure to new site
+		$this->_db_old->setQuery($structure);
+		$this->_db_old->query();
+
+		return true;
+	}
+
+	/**
+ 	* 
+	*/
+	public function migrateTableValues($table) {
+
+		// Getting the data
+		$values = $this->_getTableValues($this->_db, $table);
+
+		foreach ($values as $value)
+		{
+			// Convert the array into an object.
+			$value = (object) $value;
+
+			if (!$this->_db_old->insertObject($table, $value)) {
+				$error = $this->_db_old->getErrorMsg();
+			}
+		}
+
+		return true;
+	}
+
+	/**
+ 	* Get the table structure
+	*/
+	public function _getMultipleTableValues(&$db, $tables, $title) {
+
+		$values = array();
+
+		// Getting the data from tables
+		$this->_openStep($title);
+		foreach ($tables as $table)
+		{
+			$values[$table] = $this->_getTableValues($db, $table);
+			echo "•";
+		}
+		$this->_closeStep();
+
+		return $values;
+	}
+
+	/**
+ 	* Get the table structure
+	*/
+	public function _getTableValues(&$db, $table) {
+
+		// Getting the data
+		$query = $db->getQuery(true);
+		$query->select('*');
+		$query->from($table);
+		$db->setQuery($query);
+
+		return $db->loadAssocList();
+	}
+
+	/**
+	 * 
+	 *
+	 * @return  null    
+	 *
+	 * @since   1.0
+	 */
+	public function _openStep($title) {
+		$this->out("{$this->_c['WHITE']}===========================\n|  {$title}");
+		echo "{$this->_c['WHITE']}|  {$this->_c['RED']}[{$this->_c['YELLOW']}";
+	}
+
+	public function _closeStep() {
+		$this->out( "{$this->_c['RED']}]" );
+	}
+
+	/**
+	 * Set the table using mysql pattern
+	 *
+	 * @param   JDatabase   $db     Database connector class.
+	 * @param   string   $pattern     Pattern matching using SQL simple regular expression comparison.
+	 * @url	http://dev.mysql.com/doc/refman/5.0/en/string-comparison-functions.html#operator_like
+	 *
+	 * @return  mixed    The return value or null if the query failed.
+	 *
+	 * @since   1.0
+	 */
+	public function _getTables(&$db) {
+
+		// Getting the pattern and split with the prefix
+		$pattern = $this->get('dbprefix').$this->get('pattern');
+
+		$query = "SHOW TABLES LIKE '{$pattern}'";
+		$db->setQuery( $query );
+		
+		return $db->loadColumn();
+	} // end method
+
+} // end class
+
+// Wrap the execution in a try statement to catch any exceptions thrown anywhere in the script.
+try
+{
+	// Instantiate the application object, passing the class name to JCli::getInstance
+	// and use chaining to execute the application.
+	JApplicationCli::getInstance('CompareValues')->execute();
+}
+catch (Exception $e)
+{
+	// An exception has been caught, just echo the message.
+	fwrite(STDOUT, $e->getMessage() . "\n");
+	exit($e->getCode());
+}
