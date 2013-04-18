@@ -145,7 +145,7 @@ class MigrateCSV2MySQL extends JApplicationCli
 			$line = &$arrRead[$i];
 
 			if ($counter % 100 == 0 && $counter != 0) {
-				$this->out( "{$this->_c['RED']}] {$this->_c['LIGHT_CYAN']}{$counter}" );
+				$this->out( "{$this->_c['RED']}] {$this->_c['LIGHT_CYAN']}{$counter} / {$count}" );
 				echo "{$this->_c['WHITE']}|  {$this->_c['RED']}[{$this->_c['YELLOW']}";
 			}
 
@@ -247,10 +247,10 @@ class MigrateCSV2MySQL extends JApplicationCli
 	{
 		$columns = (array) explode(',', $line);
 
-    $create = 'CREATE TABLE IF NOT EXISTS `'.$tablename.'`
-		  (
-		  `import_custom_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
-		  ';
+		$create = 'CREATE TABLE IF NOT EXISTS `'.$tablename.'`
+			(
+			`import_custom_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+			';
 
 		$count_col = count($columns);
 
@@ -260,9 +260,9 @@ class MigrateCSV2MySQL extends JApplicationCli
 
 			$create .= "`{$col}` text NOT NULL,";
 		}
-  
-    $create .= "\nPRIMARY KEY (`import_custom_id`)
-		  ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 ;";
+
+		$create .= "\nPRIMARY KEY (`import_custom_id`)
+			) ENGINE=InnoDB  DEFAULT CHARSET=utf8 ;";
 
     $this->_db->setQuery($create);
     $this->_db->query();
