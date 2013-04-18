@@ -6,7 +6,7 @@
 * @version $Id$
 * @package MatWare
 * @subpackage JoomlaCliTools
-* @copyright Copyright 2004 - 2013 Matias Aguire. All rights reserved.
+* @copyright Copyright 2004 - 2013 Matias Aguirre. All rights reserved.
 * @license GNU General Public License version 2 or later.
 * @author Matias Aguirre <maguirre@matware.com.ar>
 * @link http://www.matware.com.ar
@@ -264,8 +264,8 @@ class MigrateCSV2MySQL extends JApplicationCli
 		$create .= "\nPRIMARY KEY (`import_custom_id`)
 			) ENGINE=InnoDB  DEFAULT CHARSET=utf8 ;";
 
-    $this->_db->setQuery($create);
-    $this->_db->query();
+		$this->_db->setQuery($create);
+		$this->_db->query();
 	}
 
 
