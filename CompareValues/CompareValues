@@ -91,7 +91,7 @@ class CompareValues extends JApplicationCli
 		// Print help
 		$this->out();
 		$this->out(' CompareValues v1.0');
-		$this->out(' Usage: CompareValues [--backup] [--diff-count] [--diff-values]');
+		$this->out(' Usage: CompareValues [--backup] [--diff { count || values }]');
 		$this->out();
 		$this->out(' Author: Matias Aguirre (maguirre@matware.com.ar)');
 		$this->out(' License: GNU/GPL http://www.gnu.org/licenses/gpl-2.0-standalone.html');
@@ -137,10 +137,12 @@ class CompareValues extends JApplicationCli
 	public function createDiff() {
 
 		// Getting the tables array
-		$tables = $this->_getTables($this->_db);
+		$tables = $this->_getTables($this->_db_old);
+
 
 		// Getting the data from the first database
 		$values = $this->_getMultipleTableValues($this->_db, $tables, 'Getting data from first table');
+
 		// Getting the data from the second database
 		$values_old = $this->_getMultipleTableValues($this->_db_old, $tables, 'Getting data from second table');
 
@@ -242,8 +244,11 @@ class CompareValues extends JApplicationCli
 		$this->_openStep($title);
 		foreach ($tables as $table)
 		{
-			$values[$table] = $this->_getTableValues($db, $table);
-			echo "•";
+
+			//if ($this->_tableExists ($table)) {
+				$values[$table] = $this->_getTableValues($db, $db->getPrefix().$table);
+				echo "•";
+			//}
 		}
 		$this->_closeStep();
 
@@ -262,6 +267,19 @@ class CompareValues extends JApplicationCli
 		$db->setQuery($query);
 
 		return $db->loadAssocList();
+	}
+
+	/**
+ 	* 
+	* @param string $table The table name
+	*/
+	function _tableExists ($table) { 
+		$tables = array();
+		$tables = $this->_db_old->getTableList();
+
+		$table = $this->_db_old->getPrefix().$table;
+
+		return (in_array($table, $tables)) ? true : false;
 	}
 
 	/**
@@ -294,12 +312,22 @@ class CompareValues extends JApplicationCli
 	public function _getTables(&$db) {
 
 		// Getting the pattern and split with the prefix
-		$pattern = $this->get('dbprefix').$this->get('pattern');
+		$pattern = $db->replacePrefix((string) $this->get('pattern'));
 
 		$query = "SHOW TABLES LIKE '{$pattern}'";
 		$db->setQuery( $query );
-		
-		return $db->loadColumn();
+		//echo $query;
+		$columns = $db->loadColumn();
+
+		foreach ($columns as &$table)
+		{
+			// Replace the prefix
+			$exp = explode("_", $table);
+			$table = str_replace($exp[0].'_', '', $table);
+		}
+
+		return $columns;
+
 	} // end method
 
 } // end class
