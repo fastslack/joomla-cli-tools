@@ -6,7 +6,7 @@
 * @version $Id$
 * @package MatWare
 * @subpackage JoomlaCliTools
-* @copyright Copyright 2004 - 2013 Matias Aguire. All rights reserved.
+* @copyright Copyright 2004 - 2013 Matias Aguirre. All rights reserved.
 * @license GNU General Public License version 2 or later.
 * @author Matias Aguirre <maguirre@matware.com.ar>
 * @link http://www.matware.com.ar
@@ -18,7 +18,7 @@ define('_JEXEC', 1);
 define('JPATH_BASE', dirname(__FILE__));
 
 // Bootstrap the application.
-require dirname(dirname(dirname(__FILE__))).'/bootstrap.php';
+require dirname(dirname(__FILE__)).'/bootstrap.php';
 
 class SimulateLogin extends JApplicationCli
 {
@@ -52,8 +52,10 @@ class SimulateLogin extends JApplicationCli
 		// Get the url to see if we are logged
 		$token = $http->get($this->get('url'))->body;
 
+
 		// Check if token is present
 		if (preg_match('/name="([a-zA-z0-9]{32})"/', $token) == 1) {
+
 			// Get the token
 			preg_match_all('/name="([a-zA-z0-9]{32})"/', $token, $spoof);
 
@@ -68,10 +70,14 @@ class SimulateLogin extends JApplicationCli
 
 			// Login and save cookie.txt
 			$response = $http->post($this->get('url'), $postfields);
+
+     	print_r($response);
 		}
 
 		// Get the URL with query and print the return
-		echo $http->get($this->get('url').$this->get('query'))->body;
+		$response = $http->get($this->get('url').$this->get('query'));
+
+		//print_r($response);
 
 	} // end method
 

@@ -130,7 +130,8 @@ class CompareTables extends JApplicationCli
 				$read = array_slice($read, 0, $read_count-1);
 
 				// Initialize variables
-				$modif_array = array();
+				//$modif_array = array();
+				$not_drop = array();
 				$addrop = $unset = '';
 				$disable = true;
 
@@ -138,6 +139,8 @@ class CompareTables extends JApplicationCli
 
 					$line = $read[$i];
 					$values = $this->stripLine($line);
+	
+					$modif_array = array();
 
 					// Search
 					if ($values['char'] == "-") {
@@ -153,28 +156,38 @@ class CompareTables extends JApplicationCli
 
 							if ($values_mod['char'] == "+") {
 
-								if($values_mod['col_name'] == $values['col_name'] && $values_mod['col_type'] != $values['col_type']) {
+								if($values_mod['col_name'] == $values['col_name']) {
 
-									$modif_array[] = $values['col_name'];
+									$not_drop[] = $values['col_name'];
 
-									$addrop .= "\t\t\t.\" MODIFY `{$values['col_name']}` {$values_mod['col_type']} {$values_mod['col_null']}";
+									//$primary = $this->_checkPrimary($tables[$y], $values_mod['col_name']);
+
+									if ($values_mod['col_type'] != $values['col_type']) {
+										// Adding value to array to prevent duplications
+										$modif_array[] = $values['col_name'];
+										// Creating the sql modify statement
+										$addrop .= "\t\t\t.\" MODIFY `{$values['col_name']}` {$values_mod['col_type']} {$values_mod['col_null']}";
+									}
+
 								}
 							}
 
 						} // end for
 
-						if (!in_array($values['col_name'], $modif_array)) {
+						
+						if (!in_array($values['col_name'], $not_drop)) {
+
 							$addrop .= "\t\t\t.\" DROP COLUMN `{$values['col_name']}`,\"\n";
 							$unset .= "\t\t\tunset(\$row['{$values['col_name']}']);\n";
 						}
 
-						if ($values['char'] == "-" && (in_array($values['col_name'], $modif_array)) ) {
+						if ( (in_array($values['col_name'], $modif_array)) || (!in_array($values['col_name'], $not_drop)) ) {
 							if ($i == $read_count - 2) {
 								$addrop .= "\";\n";
 							}else{
 								$addrop .= ",\"\n";
 							}
-						}
+						}			
 
 					} // end if
 
@@ -193,13 +206,13 @@ class CompareTables extends JApplicationCli
 						$disable = false;
 						$added = true;
 
-						if (!in_array($values['col_name'], $modif_array)) {
-							$addrop .= "\t\t\t.\" ADD `{$values['col_name']}` {$values['col_type']} {$values['col_null']}";
+						if (!in_array($values['col_name'], $modif_array) && !in_array($values['col_name'], $not_drop)) {
+							$addrop .= "\t\t\t.\" ADD `{$values['col_name']}` {$values['col_type']}";
 						}
 
 					} // end if 
 
-					if ( $values['char'] == "+" && !in_array($values['col_name'], $modif_array) ) {
+					if ( $values['char'] == "+" && !in_array($values['col_name'], $not_drop) ) {
 						if ($i == $read_count - 2) {
 							$addrop .= "\";\n";
 						}else{
@@ -232,6 +245,37 @@ class CompareTables extends JApplicationCli
 		echo (!empty($this->_return)) ? "<?php\n".$this->_return : "";
 
 	} // end method
+
+	/**
+	 * Check if the column is a primary key
+	 *
+	 * @param   string   $table     The table fs this function
+	 * @param   string   $column     The alter query
+	 *
+	 * @return  mixed    The return the function body or null if the query failed.
+	 *
+	 * @since   1.0
+	 */
+	public function _checkPrimary($table, $column) {
+
+		/*
+		 * Getting the first table columns and save it to tmp file
+		 */
+		$query = "SELECT COLUMN_NAME
+			FROM `information_schema`.`COLUMNS`
+			WHERE (`TABLE_SCHEMA` = '{$this->get('db')}')
+			AND (`TABLE_NAME` = '{$table}')
+			AND (`COLUMN_KEY` = 'PRI')";
+
+		$this->_db->setQuery( $query );
+		$primary = $this->_db->loadResult();
+
+//print_r($column);
+
+//echo "$primary == $column\n";
+
+		return ($primary == $column) ? true : false;
+	}
 
 	/**
 	 * Create the jUpgradePro methods to use with the libraries
@@ -328,6 +372,7 @@ class CompareTables extends JApplicationCli
 		$return['col_name'] = $column[0];
 		$return['col_type'] = $column[1];
 		$return['col_null'] = (isset($column[3])) ? "{$column[2]} {$column[3]}" : $column[2];
+		$return['col_null'] = (isset($column[4])) ? "{$return['col_null']} {$column[4]}" : $return['col_null'];
 
 		return $return;
 	}
