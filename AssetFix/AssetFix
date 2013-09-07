@@ -45,7 +45,7 @@ class AssetFix extends JApplicationCli
 		$this->params = new JRegistry(new JConfig);
 
 		// Creating first dabatase instance
-		$this->dbo = JFactory::getDBO();
+		$this->_db = JFactory::getDBO();
 	}
 
 	protected function doExecute()
