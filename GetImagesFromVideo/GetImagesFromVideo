@@ -1,0 +1,158 @@
+#!/usr/bin/php
+<?php
+/**
+* JoomlaCliTools
+*
+* @version $Id$
+* @package JoomlaCliTools
+* @subpackage GetImagesFromVideo
+* @copyright Copyright 2004 - 2013 Matias Aguire. All rights reserved.
+* @license GNU General Public License version 2 or later.
+* @author Matias Aguirre <maguirre@matware.com.ar>
+* @link http://www.matware.com.ar
+*/
+// We are a valid Joomla entry point.
+define('_JEXEC', 1);
+
+// Setup the base path related constant.
+define('JPATH_BASE', dirname(__FILE__));
+
+// Bootstrap the application.
+require dirname(dirname(__FILE__)) . '/bootstrap.php';
+
+class GetImagesFromVideo extends JApplicationCli
+{
+	/**
+	* Class constructor.
+	*
+	* @since 1.0.0
+	*/
+	public function __construct($config = array())
+	{
+		// Call the parent __construct method so it bootstraps the application class.
+		parent::__construct();
+
+		// Getting the parameters
+		$this->params = new JRegistry(new JConfig);
+
+		// Creating first dabatase instance
+		$this->_db = JFactory::getDBO();
+	}
+
+	/**
+	* Class constructor.
+	*
+	* @since 1.0.0
+	*/
+	public function execute()
+	{
+		// Get a directory iterator for the base path.
+		$iterator = new DirectoryIterator('./videos');
+
+		// Iterate over the files, looking for just the directories.
+		foreach ($iterator as $file)
+		{
+			$filename = $file->getFilename();
+
+			//echo $filename. " - ";
+
+			$ext =  JFile::getExt($filename);
+			$name = JFile::stripExt($filename);
+
+			//echo $ext."\n";
+
+			$id = explode('_', $name);
+			//$id = $id[1];
+
+			if ($ext == 'MOV')
+			{
+				// Set the names
+				$imageA = 'images/'.$id[1].'-A.png';
+				$imageB = 'images/'.$id[1].'-B.png';
+
+				// Define the commands for ffmpegthumbnailer
+				$cmdA = 'ffmpegthumbnailer -i videos/'.$filename.' -o '.$imageA.' -s 256 -q 10 -t 5% &> /dev/null';
+				$cmdB = 'ffmpegthumbnailer -i videos/'.$filename.' -o '.$imageB.' -s 256 -q 10 -t 95% &> /dev/null';
+
+				// Execute the commands
+				$returnA = system($cmdA, $return);
+				$returnB = system($cmdB, $return);
+
+				// Load PNG image from created thumb
+				$srcA = imagecreatefrompng($imageA);
+				$srcB = imagecreatefrompng($imageB);
+
+				// Resize first image
+				$srcAresized = imagecreatetruecolor(imagesx($srcA)-56, imagesy($srcA));
+				imagecopyresized($srcAresized, $srcA, -10, 0, 10, 0, imagesx($srcA)-10, imagesy($srcA), imagesx($srcA), imagesy($srcA));
+
+				// Resize first image
+				$srcBresized = imagecreatetruecolor(imagesx($srcB)-56, imagesy($srcB));
+				imagecopyresized($srcBresized, $srcB, -10, 0, 10, 0, imagesx($srcB)-10, imagesy($srcB), imagesx($srcB), imagesy($srcB));
+
+				// Create a blank image
+				$dest = imagecreatetruecolor(400, imagesy($srcAresized));
+
+				// Copy the first image
+				imagecopy($dest, $srcAresized, 0, 0, 0, 0, imagesx($srcAresized), imagesy($srcAresized));
+
+				// Copy the second image
+				imagecopy($dest, $srcBresized, 200, 0, 0, 0, imagesx($srcBresized), imagesy($srcBresized));
+
+				// Add video watermark
+				$watermark = imagecreatefrompng('./watermark.png');
+
+				$watermarkResized = imagecreatetruecolor(64, 64);
+
+				//imagecopy($watermarkResized, $watermark, 0, 0, 0, 0, imagesx($watermark), imagesy($watermark));
+
+				//imagecopymerge($dest, $watermark, 100, 40, 0, 0, 100, 47, 75);
+
+				//imagealphablending($watermarkResized, false);
+				//imagesavealpha($watermarkResized,true);
+				//$transparent = imagecolorallocatealpha($watermarkResized, 255, 255, 255, 0);
+
+
+				// Make the background transparent
+				//imagecolortransparent($watermarkResized);
+				imagecolortransparent($watermarkResized, imagecolorallocate($watermarkResized, 0, 0, 0));
+
+				imagecopyresized($watermarkResized, $watermark, 0, 0, 0, 0, 64, 64, imagesx($watermark), imagesy($watermark));
+
+
+				imagecopy($dest, $watermarkResized, 165, 70, 0, 0, imagesx($watermarkResized), imagesy($watermarkResized));
+
+
+
+
+				// Save the image 
+				imagepng($dest, 'images/'.$id[1].'-FINAL.png');
+
+				// Free up memory
+				imagedestroy($dest);
+				imagedestroy($srcAresized);
+				imagedestroy($srcBresized);
+
+				// Cleanup
+				unlink($imageA);
+				unlink($imageB);
+			}
+
+		}
+	}
+
+} // end class
+
+// Wrap the execution in a try statement to catch any exceptions thrown anywhere in the script.
+try
+{
+	// Instantiate the application object, passing the class name to JCli::getInstance
+	// and use chaining to execute the application.
+	JApplicationCli::getInstance('GetImagesFromVideo')->execute();
+}
+catch (Exception $e)
+{
+	// An exception has been caught, just echo the message.
+	fwrite(STDOUT, $e->getMessage() . "\n");
+	exit($e->getCode());
+}
