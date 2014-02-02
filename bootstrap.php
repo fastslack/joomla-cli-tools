@@ -11,11 +11,8 @@
 * @link http://www.matware.com.ar
 */
 
-// Import the Joomla! CMS Libraries
-//require_once dirname(dirname(__FILE__)).'/joomla-cms.rest/libraries/import.php';
-
 // Look for the Joomla! root path.
-$ROOT = dirname(dirname(__FILE__)).'/joomla-cms.rest';
+$ROOT = dirname(dirname(dirname(__FILE__))).'/www/joomla-cms';
 
 // Ensure that required path constants are defined.
 if (!defined('JPATH_LIBRARIES'))
@@ -27,10 +24,19 @@ if (file_exists(JPATH_LIBRARIES . '/import.php'))
 {
 	require JPATH_LIBRARIES . '/import.php';
 }
+// Import the Joomla! CMS
+if (file_exists(JPATH_LIBRARIES.'/cms.php')) {
+	require_once JPATH_LIBRARIES.'/cms.php';
+}
 // Ensure that required path constants are defined.
 if (!defined('JPATH_SITE'))
 {
 	define('JPATH_SITE', $ROOT);
+}
+// Define cache path
+if (!defined('JPATH_CACHE'))
+{
+	define('JPATH_CACHE', $ROOT.'/cache');
 }
 
 // Import the database libraries
@@ -39,12 +45,3 @@ jimport('joomla.database.database');
 jimport('joomla.filesystem.file');
 // Import the html libraries
 jimport('cms.html.html');
-// Load redRAD if it exists
-$redradLoader = JPATH_PLATFORM . '/redrad/bootstrap.php';
-
-if (file_exists($redradLoader))
-{
-	require_once $redradLoader;
-
-	JLoader::registerPrefix('J',  JPATH_LIBRARIES . '/redrad/joomla');
-}
