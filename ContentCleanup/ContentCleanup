@@ -78,38 +78,54 @@ class ContentCleanup extends JApplicationCli
 	{
 		// Fixing categories assets
 		$query = $this->_db->getQuery(true);
-		$query->select('id');
-		$query->from('#__content');
-		$query->where("created_by = 42");
+		$query->select('c.id');
+		$query->from('#__content AS c');
+
+		$query->join('LEFT', '#__assets AS a ON a.id = c.asset_id');
+
+		$query->where("c.created_by = 42");
+		
+		$query->order("a.rgt DESC, a.parent_id ASC");
+
+		//$this->_db->setQuery($query, 0, 100);
 		$this->_db->setQuery($query);
 		$contents = $this->_db->loadAssocList();
+
+		// Count items
+		$count = count($contents);
 
 		// Include the content table path
 		JTable::addIncludePath(JPATH_LIBRARIES . '/legacy/table/');
 
 		// Write title to buffer
 		$this->out("{$this->_c['WHITE']}-------------------------------------------------------------------------------------------------");
-		$this->out("{$this->_c['WHITE']}|  {$this->_c['BLUE']}	Deleting the content");
+		$this->out("{$this->_c['WHITE']}|  {$this->_c['BLUE']}	Deleting {$count} items");
 		$this->out("{$this->_c['WHITE']}-------------------------------------------------------------------------------------------------");
 		echo "{$this->_c['WHITE']}|  {$this->_c['RED']}[{$this->_c['YELLOW']}";
+
+		$benchmark_start = microtime(true);
 
 		// Deleting
 		foreach ($contents as $content)
 		{
-				// Get the table
-				$table = JTable::getInstance('Content', 'JTable');
-				// Load it before delete. Joomla bug?
-				$table->load($content['id']);
-				// Delete
-				$table->delete($content['id']);
-				// Write to buffer
-				echo "˕";
-				// Free
-				unset($table);
+			// Get the table
+			$table = JTable::getInstance('Content', 'JTable');
+			// Load it before delete. Joomla bug?
+			$table->load($content['id']);
+			// Delete
+			$table->delete($content['id']);
+			// Write ˕ to buffer
+			echo "˕";
+			// Free
+			unset($table);
 		}
 
 		// Closing buffer
 		$this->out( "{$this->_c['RED']}]" );
+
+		$benchmark_end = microtime(true);
+		$benchmark = $benchmark_end - $benchmark_start;
+		$this->out( "\n{$this->_c['CYAN']}[[TOTAL Benchmark]] ".round($benchmark, 3)." seconds" );
 	}
 
 } // end class
