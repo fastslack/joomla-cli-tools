@@ -1,8 +1,8 @@
 <?php
 /**
  * @version       $Id: 
- * @package       Joomla.AssetFix
- * @copyright     Copyright (C) 2005 - 2012 Open Source Matters, Inc. All rights reserved.
+ * @package       Joomla.ContentCleanup
+ * @copyright     Copyright (C) 2004 - 2014 Open Source Matters, Inc. All rights reserved.
  * @author        Matias Aguirre
  * @email         maguirre@matware.com.ar
  * @link          http://www.matware.com.ar/
@@ -13,10 +13,10 @@
 defined('_JEXEC') or die;
 
 /**
-* AssetFix configuration class.
+* ContentCleanup configuration class.
 *
-* @package AssetFix
-* @since 2.5
+* @package ContentCleanup
+* @since 1.0
 */
 final class JConfig
 {
@@ -24,15 +24,15 @@ final class JConfig
 	* The database driver.
 	*
 	* @var string
-	* @since 2.5
+	* @since 1.0
 	*/
-	public $dbtype = 'mysql';
+	public $dbtype = 'mysqli';
 
 	/**
 	* Database host.
 	*
 	* @var string
-	* @since 2.5
+	* @since 1.0
 	*/
 	public $host = 'localhost';
 
@@ -40,7 +40,7 @@ final class JConfig
 	* The database connection user.
 	*
 	* @var string
-	* @since 11.3
+	* @since 1.0
 	*/
 	public $user = '';
 
@@ -48,7 +48,7 @@ final class JConfig
 	* The database connection password.
 	*
 	* @var string
-	* @since 2.5
+	* @since 1.0
 	*/
 	public $password = '';
 
@@ -56,7 +56,7 @@ final class JConfig
 	* The database name.
 	*
 	* @var string
-	* @since 2.5
+	* @since 1.0
 	*/
 	public $db = '';
 
@@ -64,7 +64,7 @@ final class JConfig
 	* The database table prefix, if necessary.
 	*
 	* @var string
-	* @since 11.3
+	* @since 1.0
 	*/
-	public $dbprefix = 'j17_';
+	public $dbprefix = 'jos_';
 }
