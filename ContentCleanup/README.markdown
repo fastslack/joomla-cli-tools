@@ -1,7 +1,7 @@
 ContentCleanup
 ========
 
-This script is used to cleanup spam or lack content on your Joomla! site.
+This script is used to cleanup spam or junk content on your Joomla! site.
 
 Installation
 ------------
