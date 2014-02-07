@@ -1,0 +1,247 @@
+#!/usr/bin/php
+<?php
+/**
+* JoomlaCliTools
+*
+* @version $Id$
+* @package JoomlaCliTools
+* @subpackage CreateJoomlaView
+* @copyright Copyright 2004 - 2014 Matias Aguire. All rights reserved.
+* @license GNU General Public License version 2 or later.
+* @author Matias Aguirre <maguirre@matware.com.ar>
+* @link http://www.matware.com.ar
+*/
+// We are a valid Joomla entry point.
+define('_JEXEC', 1);
+
+// Setup the base path related constant.
+define('JPATH_BASE', dirname(__FILE__));
+
+// Bootstrap the application.
+require dirname(dirname(__FILE__)).'/bootstrap.php';
+
+class CreateJoomlaView extends JApplicationCli
+{
+	/**
+	* Class constructor.
+	*
+	* @since 1.0.0
+	*/
+	public function __construct()
+	{
+		// Call the parent __construct method so it bootstraps the application class.
+		parent::__construct();
+	
+		// Getting the parameters
+		$this->params = new JRegistry(new JConfig);
+
+		// Creating first dabatase instance
+		$this->_db = JFactory::getDBO();
+	}
+
+	/**
+	 * Execute
+	 *
+	 * @since	1.0.0
+	 */
+  public function execute()
+  {
+		// Read the xml form
+		$this->xml = simplexml_load_file($this->input->args[0]);
+
+		// Get the replace fields
+		$this->getReplaceList();
+
+		// Set the files
+		$files = array();
+		$files[] = '/tables/example.php';
+		$files[] = '/controllers/example.php';
+		$files[] = '/controllers/examples.php';
+		$files[] = '/models/example.php';
+		$files[] = '/models/examples.php';
+		$files[] = '/views/example/view.html.php';
+		$files[] = '/views/example/tmpl/edit.php';
+		$files[] = '/views/examples/view.html.php';
+		$files[] = '/views/examples/tmpl/default.php';
+		$files[] = '/views/examples/tmpl/default_body.php';
+		$files[] = '/views/examples/tmpl/default_foot.php';
+		$files[] = '/views/examples/tmpl/default_head.php';
+
+
+		foreach ($files as $file)
+		{
+			$this->replaceFile($file, $this->replace);
+		}
+
+		// Copy xml form to destination
+		$dest_form_path = $this->get('webpath').'/administrator/components/com_'.$this->get('option').'/models/forms/';
+		JFolder::create($dest_form_path);
+		JFile::copy($this->input->args[0], $dest_form_path.$this->get('view').'.xml');
+	}
+
+	/**
+	 * replaceFile
+	 *
+	 * @since	1.0.0
+	 */
+  public function replaceFile($file, $list)
+  {
+		// Get the content of the file
+		$buffer = JFile::read(JPATH_BASE . "/stub" .$file);
+
+		// Replace the defined content
+		foreach ($list as $key => $value)
+		{
+			$buffer = str_replace("{{$key}}", $value, $buffer);
+		}
+
+		// Replace the name of the views
+		$file = str_replace("examples", "{$this->get('view')}s", $file);
+		$file = str_replace("example", "{$this->get('view')}", $file);
+
+		// Set the correct destination pathfile
+		$destfile =  $this->get('webpath').'/administrator/components/com_'.$this->get('option').$file;
+
+		$return = JFile::write($destfile, $buffer);
+
+		return true;
+	}
+
+	/**
+	 * getReplaceList
+	 *
+	 * @since	1.0.0
+	 */
+  public function getReplaceList()
+  {
+		$this->replace = array();
+
+		$this->replace['OPTIONNAME'] = $this->get('option');
+		$this->replace['VIEWNAME'] = $this->get('view');
+
+		$this->replace['OPTIONNAMEUPPER'] = strtoupper($this->get('option'));
+		$this->replace['VIEWNAMEUPPER'] = strtoupper($this->get('view'));
+
+		$this->replace['OPTIONNAMEUCFIRST'] = ucfirst($this->get('option'));
+		$this->replace['VIEWNAMEUCFIRST'] = ucfirst($this->get('view'));
+
+		$this->replace['COM_EXAMPLE_TAB_TITLE'] = ucfirst($this->get('view'))."s";
+
+		$this->replace['CONTROLLERLISTNAME'] = ucfirst($this->get('option'))."Controller".ucfirst($this->get('view'))."s";
+		$this->replace['CONTROLLERFORMNAME'] = ucfirst($this->get('option'))."Controller".ucfirst($this->get('view'));
+		$this->replace['MODELLISTNAME'] = ucfirst($this->get('option'))."Model".ucfirst($this->get('view'))."s";
+		$this->replace['MODELFORMNAME'] = ucfirst($this->get('option'))."Model".ucfirst($this->get('view'));
+		$this->replace['VIEWLISTNAME'] = ucfirst($this->get('option'))."View".ucfirst($this->get('view'))."s";
+		$this->replace['VIEWFORMNAME'] = ucfirst($this->get('option'))."View".ucfirst($this->get('view'));
+
+		$this->replace['TABLENAME'] = ucfirst($this->get('option'))."Table".ucfirst($this->get('view'));
+
+		// Create the modal filter
+		$this->createModalFilter();
+
+		// Create the view filter
+		$this->createViewFilter();
+
+		// Create the view list
+		$this->createViewList();
+
+		return true;
+	}
+
+	/**
+	 * createViewFilter
+	 *
+	 * @since	1.0.0
+	 */
+  public function createViewList()
+  {
+		// Create the body list view
+		$this->replace['VIEWLISTBODY'] = "";
+		$this->replace['VIEWLISTHEAD'] = "";
+
+		foreach ($this->xml->fieldset->field as $field)
+		{
+			$primary = (string)$field->attributes()->primary;
+			$name = (string)$field->attributes()->name;
+			$name_up = strtoupper($name);
+
+			if ($name != 'id')
+			{
+				if ($primary == true)
+				{
+					$this->replace['VIEWLISTBODY'] .= "\t\t<td>\n\t\t\t<a href=\"index.php?option=com_{$this->replace['OPTIONNAME']}&view={$this->replace['VIEWNAME']}&layout=edit&id=<?php echo \$item->id; ?>\"><?php echo \$item->{$name}; ?></a>\n\t\t</td>\n";
+
+				}else{
+					$this->replace['VIEWLISTBODY'] .= "\t\t<td>\n\t\t\t<?php echo \$item->{$name}; ?>\n\t\t</td>\n";
+				}
+
+				$this->replace['VIEWLISTHEAD'] .= "\t<th>\n\t\t<?php echo JText::_('COM_{$this->replace['OPTIONNAMEUPPER']}_{$this->replace['VIEWNAMEUPPER']}S_{$name_up}'); ?>\n\t</th>\n";
+
+			}
+		}
+	}
+
+	/**
+	 * createViewFilter
+	 *
+	 * @since	1.0.0
+	 */
+  public function createViewFilter()
+  {
+		// Create the view filter
+		$this->replace['VIEWFILTERLIST'] = "";
+
+		foreach ($this->xml->fieldset->field as $field)
+		{
+			$name = (string)$field->attributes()->name;
+			$name_up = strtoupper($name);
+
+			if ($name != 'id')
+			{
+				$this->replace['VIEWFILTERLIST'] .= "\t\t\t\t't.{$name}' =>  JText::_('COM_{$this->replace['OPTIONNAMEUPPER']}_{$this->replace['VIEWNAMEUPPER']}S_{$name_up}'),\n";
+			}
+		}
+
+		$this->replace['VIEWFILTERLIST'] .= "\t\t\t\t't.id' => JText::_('JGRID_HEADING_ID')";
+	}
+
+	/**
+	 * createModalFilter
+	 *
+	 * @since	1.0.0
+	 */
+  public function createModalFilter()
+  {
+		// Create the modal filter
+		$buffer = "";
+
+		foreach ($this->xml->fieldset->field as $field)
+		{
+			$name = (string)$field->attributes()->name;
+			$tabs = ($name !== 'id') ? "\t\t\t\t" : "";
+
+			$buffer .= "{$tabs}'{$name}', 't.{$name}',\n";
+		}
+
+		$this->replace['MODALFILTERLIST'] = <<<EOD
+			\$config['filter_fields'] = array(
+				{$buffer}
+			);
+EOD;
+	}
+
+} // end class
+
+// Wrap the execution in a try statement to catch any exceptions thrown anywhere in the script.
+try
+{
+	// Instantiate the application object, passing the class name to JCli::getInstance
+	// and use chaining to execute the application.
+	JApplicationCli::getInstance('CreateJoomlaView')->execute();
+}
+catch (Exception $e)
+{
+	// An exception has been caught, just echo the message.
+	fwrite(STDOUT, $e->getMessage() . "\n");
+	exit($e->getCode());
+}
