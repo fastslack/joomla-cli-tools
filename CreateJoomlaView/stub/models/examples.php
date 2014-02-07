@@ -60,6 +60,9 @@ class {MODELLISTNAME} extends JModelList
 	protected function populateState($ordering = null, $direction = null)
 	{
 		// Load the filter state.
+		$tournament = $this->getUserStateFromRequest($this->context . '.filter.tournament', 'filter_tournament');
+		$this->setState('filter.tournament', $tournament);
+
 		$search = $this->getUserStateFromRequest($this->context . '.filter.search', 'filter_search');
 		$this->setState('filter.search', $search);
 
@@ -74,7 +77,7 @@ class {MODELLISTNAME} extends JModelList
 		$this->setState('params', $params);
 
 		// List state information.
-		parent::populateState('t.title', 'asc');
+		parent::populateState('t.{PRIMARYNAME}', 'asc');
 	}
 
 	/**
@@ -113,7 +116,7 @@ class {MODELLISTNAME} extends JModelList
 		// From the hello table
 		$query->from($db->quoteName('#__{OPTIONNAME}_{VIEWNAME}s') . ' AS t');
 
-		// Filter by search in title
+		// Filter by search in {PRIMARYNAME}
 		$search = $this->getState('filter.search');
 		if (!empty($search))
 		{
@@ -124,7 +127,7 @@ class {MODELLISTNAME} extends JModelList
 			else
 			{
 				$search = $db->quote('%' . $db->escape($search, true) . '%');
-				$query->where('t.title LIKE ' . $search);
+				$query->where('t.{PRIMARYNAME} LIKE ' . $search);
 			}
 		}
 

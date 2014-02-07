@@ -17,6 +17,9 @@ defined('_JEXEC') or die('Restricted Access');
 	<th width="20">
 		<input type="checkbox" name="toggle" value="" onclick="checkAll(<?php echo count($this->items); ?>);" />
 	</th>
+	<th>
+		&nbsp;
+	</th>
 	{VIEWLISTHEAD}
 	<th width="5">
 		<?php echo JText::_('JGRID_HEADING_ID'); ?>

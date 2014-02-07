@@ -47,11 +47,27 @@ class {VIEWLISTNAME} extends JViewLegacy {
 	*/
 	protected function addToolBar() 
 	{
+		$canDo = JHelperContent::getActions('com_{OPTIONNAME}', '{VIEWNAME}', $this->state->get('filter.published'));
+		$user  = JFactory::getUser();
+
 		JToolBarHelper::title(JText::_( 'COM_{OPTIONNAMEUPPER}_{VIEWNAMEUPPER}S_TITLE' ), 'plugin.png' );
-		JToolBarHelper::addNew('{VIEWNAME}.add');
-		JToolBarHelper::editList('{VIEWNAME}.edit');
-		JToolBarHelper::deleteList('', '{VIEWNAME}s.delete');
-		//JToolBarHelper::custom('cpanel.view', 'back.png', 'back_f2.png', 'JBACK', false, false);
+
+		if ($canDo->get('core.create'))
+		{
+			JToolbarHelper::addNew('{VIEWNAME}.add');
+		}
+
+		if (($canDo->get('core.edit')) || ($canDo->get('core.edit.own')))
+		{
+			JToolbarHelper::editList('{VIEWNAME}.edit');
+		}
+
+		if ($canDo->get('core.edit.state'))
+		{
+			JToolbarHelper::publish('{VIEWNAME}s.publish', 'JTOOLBAR_PUBLISH', true);
+			JToolbarHelper::unpublish('{VIEWNAME}s.unpublish', 'JTOOLBAR_UNPUBLISH', true);
+		}
+
 		JToolBarHelper::spacer();
 	}
 

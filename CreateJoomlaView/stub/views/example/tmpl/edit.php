@@ -22,7 +22,7 @@ $document	= JFactory::getDocument();
 
 <?php echo JHtml::_('bootstrap.startTabSet', 'myTab', array('active' => 'general')); ?>
 
-	<?php echo JHtml::_('bootstrap.addTab', 'myTab', 'general', JText::_('COM_{OPTIONNAMEUPPER}_{VIEWNAMEUPPER}_TITLE', true)); ?>
+	<?php echo JHtml::_('bootstrap.addTab', 'myTab', 'general', JText::_('COM_{OPTIONNAMEUPPER}_{VIEWNAMEUPPER}S_TITLE', true)); ?>
 	<div>
 		<!-- Begin Content -->
 		<div class="span6 form-horizontal">
