@@ -20,6 +20,8 @@ define('JPATH_BASE', dirname(__FILE__));
 // Bootstrap the application.
 require dirname(dirname(__FILE__)).'/bootstrap.php';
 
+jimport('joomla.filesystem.folder');
+
 class CreateJoomlaView extends JApplicationCli
 {
 	/**
@@ -31,7 +33,7 @@ class CreateJoomlaView extends JApplicationCli
 	{
 		// Call the parent __construct method so it bootstraps the application class.
 		parent::__construct();
-	
+
 		// Getting the parameters
 		$this->params = new JRegistry(new JConfig);
 
@@ -74,9 +76,43 @@ class CreateJoomlaView extends JApplicationCli
 		}
 
 		// Copy xml form to destination
-		$dest_form_path = $this->get('webpath').'/administrator/components/com_'.$this->get('option').'/models/forms/';
-		JFolder::create($dest_form_path);
-		JFile::copy($this->input->args[0], $dest_form_path.$this->get('view').'.xml');
+		$this->destpath = $this->get('webpath').'/administrator/components/com_'.$this->get('option');
+
+		JFolder::create($this->destpath.'/models/forms/');
+		JFile::copy($this->input->args[0], $this->destpath.'/models/forms/'.$this->get('view').'.xml');
+
+		// Set the languages strings
+		$this->replaceLanguage();
+	}
+
+	/**
+	 * replaceFile
+	 *
+	 * @since	1.0.0
+	 */
+  public function replaceLanguage()
+  {
+		// Get the content of the file
+		$buffer = JFile::read($this->get('webpath')."/administrator/language/en-GB/en-GB.com_{$this->replace['OPTIONNAME']}.ini");
+
+		// Replace the language fields
+		foreach ($this->xml->fieldset->field as $field)
+		{
+			$primary = (string)$field->attributes()->primary;
+			$name = (string)$field->attributes()->name;
+			$name_up = strtoupper($name);
+
+			if ($name != 'id')
+			{
+				$buffer .= "\nCOM_{$this->replace['OPTIONNAMEUPPER']}_{$this->replace['VIEWNAMEUPPER']}S_{$name_up}=\"\"";
+			}
+		}
+
+		// Add the language title
+		$buffer .= "\nCOM_{$this->replace['OPTIONNAMEUPPER']}_{$this->replace['VIEWNAMEUPPER']}S_TITLE=\"\"";
+
+		// Write to file
+		$return = JFile::write($this->get('webpath')."/administrator/language/en-GB/en-GB.com_{$this->replace['OPTIONNAME']}.ini", $buffer);
 	}
 
 	/**
@@ -114,10 +150,27 @@ class CreateJoomlaView extends JApplicationCli
 	 */
   public function getReplaceList()
   {
+		// Get the fields
+		$fields = array();
+
+		foreach ($this->xml->fieldset->field as $field)
+		{
+			$primary = (string)$field->attributes()->primary;
+			$this->fields[] = (string)$field->attributes()->name;
+
+			if ($primary == true)
+			{
+				$this->primary = (string)$field->attributes()->name;
+			}
+		}
+
+		// Declare the replace array
 		$this->replace = array();
 
 		$this->replace['OPTIONNAME'] = $this->get('option');
 		$this->replace['VIEWNAME'] = $this->get('view');
+
+		$this->replace['PRIMARYNAME'] = $this->primary;
 
 		$this->replace['OPTIONNAMEUPPER'] = strtoupper($this->get('option'));
 		$this->replace['VIEWNAMEUPPER'] = strtoupper($this->get('view'));
@@ -191,9 +244,9 @@ class CreateJoomlaView extends JApplicationCli
 		// Create the view filter
 		$this->replace['VIEWFILTERLIST'] = "";
 
-		foreach ($this->xml->fieldset->field as $field)
+		foreach ($this->fields as $field)
 		{
-			$name = (string)$field->attributes()->name;
+			$name = $field;
 			$name_up = strtoupper($name);
 
 			if ($name != 'id')
@@ -215,9 +268,9 @@ class CreateJoomlaView extends JApplicationCli
 		// Create the modal filter
 		$buffer = "";
 
-		foreach ($this->xml->fieldset->field as $field)
+		foreach ($this->fields as $field)
 		{
-			$name = (string)$field->attributes()->name;
+			$name = $field;
 			$tabs = ($name !== 'id') ? "\t\t\t\t" : "";
 
 			$buffer .= "{$tabs}'{$name}', 't.{$name}',\n";
