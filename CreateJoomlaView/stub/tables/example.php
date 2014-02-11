@@ -25,6 +25,6 @@ class {TABLENAME} extends JTable {
    * @param object Database connector object
    */
 	function __construct(&$_db) {
-		parent::__construct('#__{OPTIONNAME}_{VIEWNAME}s', 'id', $_db);
+		parent::__construct('#__{OPTIONNAME}_{VIEWNAMEPLURAL}', 'id', $_db);
 	}
 }

@@ -28,6 +28,8 @@ class {VIEWLISTNAME} extends JViewLegacy {
 		$this->state		= $this->get('State');
 		$this->items = $this->get('Items');
 		$this->pagination = $this->get('Pagination');
+		$this->filterForm    = $this->get('FilterForm');
+		$this->activeFilters = $this->get('ActiveFilters');
 
 		// Check for errors.
 		if (count($errors = $this->get('Errors'))) 
@@ -50,7 +52,7 @@ class {VIEWLISTNAME} extends JViewLegacy {
 		$canDo = JHelperContent::getActions('com_{OPTIONNAME}', '{VIEWNAME}', $this->state->get('filter.published'));
 		$user  = JFactory::getUser();
 
-		JToolBarHelper::title(JText::_( 'COM_{OPTIONNAMEUPPER}_{VIEWNAMEUPPER}S_TITLE' ), 'plugin.png' );
+		JToolBarHelper::title(JText::_( 'COM_{OPTIONNAMEUPPER}_{VIEWNAMEUPPERPLURAL}_TITLE' ), 'plugin.png' );
 
 		if ($canDo->get('core.create'))
 		{
@@ -64,8 +66,8 @@ class {VIEWLISTNAME} extends JViewLegacy {
 
 		if ($canDo->get('core.edit.state'))
 		{
-			JToolbarHelper::publish('{VIEWNAME}s.publish', 'JTOOLBAR_PUBLISH', true);
-			JToolbarHelper::unpublish('{VIEWNAME}s.unpublish', 'JTOOLBAR_UNPUBLISH', true);
+			JToolbarHelper::publish('{VIEWNAMEPLURAL}.publish', 'JTOOLBAR_PUBLISH', true);
+			JToolbarHelper::unpublish('{VIEWNAMEPLURAL}.unpublish', 'JTOOLBAR_UNPUBLISH', true);
 		}
 
 		JToolBarHelper::spacer();

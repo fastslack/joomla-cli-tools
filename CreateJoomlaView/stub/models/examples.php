@@ -60,9 +60,6 @@ class {MODELLISTNAME} extends JModelList
 	protected function populateState($ordering = null, $direction = null)
 	{
 		// Load the filter state.
-		$tournament = $this->getUserStateFromRequest($this->context . '.filter.tournament', 'filter_tournament');
-		$this->setState('filter.tournament', $tournament);
-
 		$search = $this->getUserStateFromRequest($this->context . '.filter.search', 'filter_search');
 		$this->setState('filter.search', $search);
 
@@ -114,7 +111,7 @@ class {MODELLISTNAME} extends JModelList
 		// Select some fields
 		$query->select('*');
 		// From the hello table
-		$query->from($db->quoteName('#__{OPTIONNAME}_{VIEWNAME}s') . ' AS t');
+		$query->from($db->quoteName('#__{OPTIONNAME}_{VIEWNAMEPLURAL}') . ' AS t');
 
 		// Filter by search in {PRIMARYNAME}
 		$search = $this->getState('filter.search');
@@ -132,10 +129,8 @@ class {MODELLISTNAME} extends JModelList
 		}
 
 		// Add the list ordering clause.
-		$orderCol = $this->state->get('list.ordering');
-		$orderDirn = $this->state->get('list.direction');
-
-		$query->order($db->escape($orderCol . ' ' . $orderDirn));
+		$ordering = $this->state->get('list.fullordering');
+		$query->order($db->escape($ordering));
 
 		return $query;
 	}
