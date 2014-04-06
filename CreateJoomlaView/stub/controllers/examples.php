@@ -38,4 +38,20 @@ class {CONTROLLERLISTNAME} extends JControllerAdmin
 	protected function postDeleteHook(JModelLegacy $model, $ids = null)
 	{
 	}
+
+	/**
+	 * Method to cancel an edit.
+	 *
+	 * @param   string  $key  The name of the primary key of the URL variable.
+	 *
+	 * @return  boolean  True if access level checks pass, false otherwise.
+	 *
+	 * @since   1.6
+	 */
+	public function cancel($key = null)
+	{
+		JSession::checkToken() or jexit(JText::_('JINVALID_TOKEN'));
+
+		$this->setRedirect( 'index.php?option=com_{OPTIONNAME}', null );
+	}
 }

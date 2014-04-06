@@ -70,6 +70,7 @@ class {VIEWLISTNAME} extends JViewLegacy {
 			JToolbarHelper::unpublish('{VIEWNAMEPLURAL}.unpublish', 'JTOOLBAR_UNPUBLISH', true);
 		}
 
+		JToolBarHelper::cancel('{VIEWNAMEPLURAL}.cancel', 'JTOOLBAR_CLOSE');
 		JToolBarHelper::spacer();
 	}
 

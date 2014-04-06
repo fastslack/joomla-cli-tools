@@ -20,11 +20,11 @@ $userId		= $user->get('id');
 foreach($this->items as $i => $item): 
 
 	$ordering   = ($listOrder == 't.id');
-	$canCreate  = $user->authorise('core.create',     'com_worldcup.team.'.$item->id);
-	$canEdit    = $user->authorise('core.edit',       'com_worldcup.team.'.$item->id);
+	$canCreate  = $user->authorise('core.create',     'com_{OPTIONNAME}.{VIEWNAME}.'.$item->id);
+	$canEdit    = $user->authorise('core.edit',       'com_{OPTIONNAME}.{VIEWNAME}.'.$item->id);
 	$canCheckin = $user->authorise('core.manage',     'com_checkin') || $item->checked_out == $userId || $item->checked_out == 0;
-	$canEditOwn = $user->authorise('core.edit.own',   'com_worldcup.team.'.$item->id) && $item->created_by == $userId;
-	$canChange  = $user->authorise('core.edit.state', 'com_worldcup.team.'.$item->id) && $canCheckin;
+	$canEditOwn = $user->authorise('core.edit.own',   'com_{OPTIONNAME}.{VIEWNAME}.'.$item->id) && $item->created_by == $userId;
+	$canChange  = $user->authorise('core.edit.state', 'com_{OPTIONNAME}.{VIEWNAME}.'.$item->id) && $canCheckin;
 ?>
 	<tr class="row<?php echo $i % 2; ?>">
 		<td>
@@ -32,11 +32,11 @@ foreach($this->items as $i => $item):
 		</td>
 		<td class="center" width="50">
 			<div class="btn-group">
-				<?php echo JHtml::_('jgrid.published', $item->published, $i, 'teams.', $canChange, 'cb', $item->publish_up, $item->publish_down); ?>
+				<?php echo JHtml::_('jgrid.published', $item->published, $i, '{VIEWNAMEPLURAL}.', $canChange, 'cb', $item->publish_up, $item->publish_down); ?>
 				<?php
 				// Create dropdown items
 				$action = ($item->published == 1) ? 'unpublish' : 'publish';
-				JHtml::_('actionsdropdown.' . $action, 'cb' . $i, 'teams');
+				JHtml::_('actionsdropdown.' . $action, 'cb' . $i, '{VIEWNAMEPLURAL}');
 
 				// Render dropdown list
 				echo JHtml::_('actionsdropdown.render', $this->escape($item->title));
