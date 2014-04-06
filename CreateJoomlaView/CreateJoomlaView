@@ -43,14 +43,37 @@ class CreateJoomlaView extends JApplicationCli
 	}
 
 	/**
+	 * Help
+	 *
+	 * @return	none
+	 * @since	0.0.1
+	 */
+  public function help()
+	{
+		// Print help
+		$this->out(' Usage: CreateJoomlaView --create example_form.xml');
+		$this->out();
+		$this->out(' Author: Matias Aguirre (maguirre@matware.com.ar)');
+		$this->out(' License: GNU/GPL http://www.gnu.org/licenses/gpl-2.0-standalone.html');
+		$this->out();
+	}
+
+	/**
 	 * Execute
 	 *
 	 * @since	1.0.0
 	 */
   public function execute()
   {
+		$create = $this->input->get('create', 0, 'none');
+
+		if (empty($create)) {
+			$this->help();
+			exit;
+		}
+
 		// Read the xml form
-		$this->xml = simplexml_load_file($this->input->args[0]);
+		$this->xml = simplexml_load_file($create);
 
 		// Get the replace fields
 		$this->getReplaceList();
@@ -67,7 +90,7 @@ class CreateJoomlaView extends JApplicationCli
 		// Copy xml form to destination
 		$this->destpath = $this->get('webpath').'/administrator/components/com_'.$this->get('option');
 
-		JFile::copy($this->input->args[0], $this->destpath.'/models/forms/'.$this->get('view').'.xml');
+		JFile::copy($create, $this->destpath.'/models/forms/'.$this->get('view').'.xml');
 
 		// Set the languages strings
 		$this->replaceLanguage();
