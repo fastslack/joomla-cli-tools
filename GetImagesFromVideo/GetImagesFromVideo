@@ -6,7 +6,7 @@
 * @version $Id$
 * @package JoomlaCliTools
 * @subpackage GetImagesFromVideo
-* @copyright Copyright 2004 - 2013 Matias Aguire. All rights reserved.
+* @copyright Copyright 2004 - 2015 Matias Aguire. All rights reserved.
 * @license GNU General Public License version 2 or later.
 * @author Matias Aguirre <maguirre@matware.com.ar>
 * @link http://www.matware.com.ar
@@ -20,6 +20,15 @@ define('JPATH_BASE', dirname(__FILE__));
 // Bootstrap the application.
 require dirname(dirname(__FILE__)) . '/bootstrap.php';
 
+/**
+ * Base class GetImagesFromVideo.
+ *
+ * @requirements	ffmpegthumbnailer
+ *
+ * @package     JoomlaCliTools
+ * @subpackage  GetImagesFromVideo
+ * @since       1.0
+ */
 class GetImagesFromVideo extends JApplicationCli
 {
 	/**
@@ -36,7 +45,7 @@ class GetImagesFromVideo extends JApplicationCli
 		$this->params = new JRegistry(new JConfig);
 
 		// Creating first dabatase instance
-		$this->_db = JFactory::getDBO();
+		//$this->_db = JFactory::getDBO();
 	}
 
 	/**
@@ -46,33 +55,38 @@ class GetImagesFromVideo extends JApplicationCli
 	*/
 	public function execute()
 	{
+		$path = './videos';
+		$initial = 15;
+		$final = 85;
+
 		// Get a directory iterator for the base path.
-		$iterator = new DirectoryIterator('./videos');
+		$iterator = new DirectoryIterator($path);
 
 		// Iterate over the files, looking for just the directories.
 		foreach ($iterator as $file)
 		{
 			$filename = $file->getFilename();
 
-			//echo $filename. " - ";
+			echo $filename. " - ";
 
 			$ext =  JFile::getExt($filename);
-			$name = JFile::stripExt($filename);
+			$id = $name = JFile::stripExt($filename);
 
-			//echo $ext."\n";
+			echo $id."\n";
 
-			$id = explode('_', $name);
+			// Old name fix
+			//$id = explode('_', $name);
 			//$id = $id[1];
 
-			if ($ext == 'MOV')
+			if ($ext == 'MOV' || $ext == 'mp4')
 			{
 				// Set the names
-				$imageA = 'images/'.$id[1].'-A.png';
-				$imageB = 'images/'.$id[1].'-B.png';
+				$imageA = 'images/'.$id.'-A.png';
+				$imageB = 'images/'.$id.'-B.png';
 
 				// Define the commands for ffmpegthumbnailer
-				$cmdA = 'ffmpegthumbnailer -i videos/'.$filename.' -o '.$imageA.' -s 256 -q 10 -t 5% &> /dev/null';
-				$cmdB = 'ffmpegthumbnailer -i videos/'.$filename.' -o '.$imageB.' -s 256 -q 10 -t 95% &> /dev/null';
+				$cmdA = 'ffmpegthumbnailer -i videos/'.$filename.' -o '.$imageA.' -s 256 -q 10 -t '.$initial.'% &> /dev/null';
+				$cmdB = 'ffmpegthumbnailer -i videos/'.$filename.' -o '.$imageB.' -s 256 -q 10 -t '.$final.'% &> /dev/null';
 
 				// Execute the commands
 				$returnA = system($cmdA, $return);
@@ -102,31 +116,27 @@ class GetImagesFromVideo extends JApplicationCli
 				// Add video watermark
 				$watermark = imagecreatefrompng('./watermark.png');
 
+				// Create watermark
 				$watermarkResized = imagecreatetruecolor(64, 64);
 
 				//imagecopy($watermarkResized, $watermark, 0, 0, 0, 0, imagesx($watermark), imagesy($watermark));
-
 				//imagecopymerge($dest, $watermark, 100, 40, 0, 0, 100, 47, 75);
-
 				//imagealphablending($watermarkResized, false);
 				//imagesavealpha($watermarkResized,true);
 				//$transparent = imagecolorallocatealpha($watermarkResized, 255, 255, 255, 0);
-
 
 				// Make the background transparent
 				//imagecolortransparent($watermarkResized);
 				imagecolortransparent($watermarkResized, imagecolorallocate($watermarkResized, 0, 0, 0));
 
+				// Resize
 				imagecopyresized($watermarkResized, $watermark, 0, 0, 0, 0, 64, 64, imagesx($watermark), imagesy($watermark));
 
-
+				// Copy the results
 				imagecopy($dest, $watermarkResized, 165, 70, 0, 0, imagesx($watermarkResized), imagesy($watermarkResized));
 
-
-
-
 				// Save the image 
-				imagepng($dest, 'images/'.$id[1].'-FINAL.png');
+				imagepng($dest, 'images/'.$id.'.png');
 
 				// Free up memory
 				imagedestroy($dest);
