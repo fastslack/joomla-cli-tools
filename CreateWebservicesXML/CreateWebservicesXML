@@ -20,7 +20,7 @@ define('JPATH_BASE', dirname(__FILE__));
 // Bootstrap the application.
 require dirname(dirname(__FILE__)).'/bootstrap.php';
 
-class CreateTableClass extends JApplicationCli
+class CreateWebservicesXML extends JApplicationCli
 {
 	/**
 	* Class constructor.
@@ -74,7 +74,7 @@ try
 {
 	// Instantiate the application object, passing the class name to JCli::getInstance
 	// and use chaining to execute the application.
-	JApplicationCli::getInstance('CreateTableClass')->execute();
+	JApplicationCli::getInstance('CreateWebservicesXML')->execute();
 }
 catch (Exception $e)
 {
