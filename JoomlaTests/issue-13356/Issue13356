@@ -1,0 +1,82 @@
+#!/usr/bin/php
+<?php
+/**
+* JoomlaCliTools/JoomlaTests
+*
+* @version $Id$
+* @package Matware
+* @subpackage JoomlaCliTools/JoomlaTests
+* @copyright Copyright 2004 - 2016 Matias Aguire. All rights reserved.
+* @license GNU General Public License version 2 or later.
+* @author Matias Aguirre <maguirre@matware.com.ar>
+*/
+// We are a valid Joomla entry point.
+define('_JEXEC', 1);
+
+// Setup the base path related constant.
+define('JPATH_BASE', dirname(__FILE__));
+
+// Bootstrap the application.
+require dirname(dirname(dirname(__FILE__))).'/bootstrap.php';
+require JPATH_CONFIGURATION.'/configuration.php';
+
+class Issue13356 extends JApplicationWeb
+{
+	/**
+	* Class constructor.
+	*
+	* @return void
+	*
+	* @since 1.0.0
+	*/
+	public function __construct()
+	{
+		// Call the parent __construct method so it bootstraps the application class.
+		parent::__construct();
+
+		// Get parameters
+		$this->params = new JRegistry(new JConfig);
+
+		// Initialize dabatase instance
+		$this->_db = JFactory::getDBO();
+	}
+
+	/**
+	 * Execute
+	 *
+	 * @return	none
+	 * @since	1.0.0
+	 */
+	public function execute()
+	{
+		$query = "SELECT * FROM #__users WHERE noexists = 0";
+
+		$this->_db->setQuery( $query );
+
+		try
+		{
+			$return = $this->_db->loadObjectList();
+		}
+		catch (Exception $e)
+		{
+			fwrite(STDOUT, $e->getMessage() . "\n");
+			exit($e->getCode());
+		}
+
+	} // end method
+
+} // end class
+
+// Wrap the execution in a try statement to catch any exceptions thrown anywhere in the script.
+try
+{
+	// Instantiate the application object, passing the class name to JApplicationWeb::getInstance
+	// and use chaining to execute the application.
+	JApplicationWeb::getInstance('Issue13356')->execute();
+}
+catch (Exception $e)
+{
+	// An exception has been caught, just echo the message.
+	fwrite(STDOUT, $e->getMessage() . "\n");
+	exit($e->getCode());
+}
