@@ -1,19 +1,26 @@
 <?php
 /**
-* {OPTIONNAMEUCFIRST}
-*
-* @version $Id:
-* @package Matware.{OPTIONNAMEUCFIRST}
-* @copyright Copyright (C) 2004 - 2014 Matware. All rights reserved.
-* @author Matias Aguirre
-* @email maguirre@matware.com.ar
-* @link http://www.matware.com.ar/
-* @license GNU General Public License version 2 or later; see LICENSE
-*/
+ * {OPTIONNAMEUCFIRST}
+ *
+ * @version   $Id:
+ * @package   Matware.{OPTIONNAMEUCFIRST}
+ * @copyright Copyright (C) 2004 - 2019 Matware. All rights reserved.
+ * @author    Matias Aguirre
+ * @email     maguirre@matware.com.ar
+ * @link      http://www.matware.com.ar/
+ * @license   GNU General Public License version 2 or later; see LICENSE
+ */
+
 // Check to ensure this file is included in Joomla!
 defined('_JEXEC') or die();
 
-class {CONTROLLERFORMNAME} extends JControllerForm
+use Joomla\CMS\Factory;
+use Joomla\CMS\MVC\Controller\FormController;
+use Joomla\CMS\Session\Session;
+use Joomla\CMS\Language\Text;
+use Joomla\CMS\Router\Route;
+
+class {CONTROLLERFORMNAME} extends FormController
 {
 	/**
 	 * Method to save a record.
@@ -23,19 +30,20 @@ class {CONTROLLERFORMNAME} extends JControllerForm
 	 *
 	 * @return  boolean  True if successful, false otherwise.
 	 *
-	 * @since   12.2
+	 * @throws  Exception
+	 * @since   1.0.0
 	 */
 	public function save($key = null, $urlVar = null)
 	{
 		// Check for request forgeries.
-		JSession::checkToken() or jexit(JText::_('JINVALID_TOKEN'));
+		Session::checkToken() or jexit(Text::_('JINVALID_TOKEN'));
 
-		$app   = JFactory::getApplication();
-		$lang  = JFactory::getLanguage();
-		$model = $this->getModel();
-		$data  = $this->input->post->get('jform', array(), 'array');
+		$app     = Factory::getApplication();
+		$lang    = Factory::getLanguage();
+		$model   = $this->getModel();
+		$data    = $this->input->post->get('jform', array(), 'array');
 		$context = "$this->option.edit.$this->context";
-		$task = $this->getTask();
+		$task    = $this->getTask();
 
 		// To avoid data collisions the urlVar may be different from the primary key.
 		if (empty($urlVar))
@@ -46,11 +54,11 @@ class {CONTROLLERFORMNAME} extends JControllerForm
 		// Access check.
 		if (!$this->allowSave($data, $key))
 		{
-			$this->setError(JText::_('JLIB_APPLICATION_ERROR_SAVE_NOT_PERMITTED'));
+			$this->setError(Text::_('JLIB_APPLICATION_ERROR_SAVE_NOT_PERMITTED'));
 			$this->setMessage($this->getError(), 'error');
 
 			$this->setRedirect(
-				JRoute::_(
+				Route::_(
 					'index.php?option=' . $this->option . '&view=' . $this->view_list
 					. $this->getRedirectToListAppend(), false
 				)
@@ -97,7 +105,7 @@ class {CONTROLLERFORMNAME} extends JControllerForm
 
 			// Redirect back to the edit screen.
 			$this->setRedirect(
-				JRoute::_(
+				Route::_(
 					'index.php?option=' . $this->option . '&view=' . $this->view_item
 					. $this->getRedirectToItemAppend($recordId, $urlVar), false
 				)
@@ -113,11 +121,11 @@ class {CONTROLLERFORMNAME} extends JControllerForm
 			$app->setUserState($context . '.data', $validData);
 
 			// Redirect back to the edit screen.
-			$this->setError(JText::sprintf('JLIB_APPLICATION_ERROR_SAVE_FAILED', $model->getError()));
+			$this->setError(Text::sprintf('JLIB_APPLICATION_ERROR_SAVE_FAILED', $model->getError()));
 			$this->setMessage($this->getError(), 'error');
 
 			$this->setRedirect(
-				JRoute::_(
+				Route::_(
 					'index.php?option=' . $this->option . '&view=' . $this->view_item
 					. $this->getRedirectToItemAppend($recordId, $urlVar), false
 				)
@@ -127,7 +135,7 @@ class {CONTROLLERFORMNAME} extends JControllerForm
 		}
 
 		$this->setMessage(
-			JText::_(
+			Text::_(
 				($lang->hasKey($this->text_prefix . ($recordId == 0 && $app->isSite() ? '_SUBMIT' : '') . '_SAVE_SUCCESS')
 					? $this->text_prefix
 					: 'JLIB_APPLICATION') . ($recordId == 0 && $app->isSite() ? '_SUBMIT' : '') . '_SAVE_SUCCESS'
@@ -146,7 +154,7 @@ class {CONTROLLERFORMNAME} extends JControllerForm
 
 				// Redirect back to the edit screen.
 				$this->setRedirect(
-					JRoute::_(
+					Route::_(
 						'index.php?option=' . $this->option . '&view=' . $this->view_item
 						. $this->getRedirectToItemAppend($recordId, $urlVar), false
 					)
@@ -160,7 +168,7 @@ class {CONTROLLERFORMNAME} extends JControllerForm
 
 				// Redirect back to the edit screen.
 				$this->setRedirect(
-					JRoute::_(
+					Route::_(
 						'index.php?option=' . $this->option . '&view=' . $this->view_item
 						. $this->getRedirectToItemAppend(null, $urlVar), false
 					)
@@ -174,7 +182,7 @@ class {CONTROLLERFORMNAME} extends JControllerForm
 
 				// Redirect to the list screen.
 				$this->setRedirect(
-					JRoute::_(
+					Route::_(
 						'index.php?option=' . $this->option . '&view=' . $this->view_list
 						. $this->getRedirectToListAppend(), false
 					)

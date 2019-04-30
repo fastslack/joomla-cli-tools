@@ -4,7 +4,7 @@
 *
 * @version $Id$
 * @package JoomlaCliTools
-* @subpackage CreateTableClass
+* @subpackage CreateJoomlaView
 * @copyright Copyright 2004 - 2013 Matias Aguire. All rights reserved.
 * @license GNU General Public License version 2 or later.
 * @author Matias Aguirre <maguirre@matware.com.ar>
@@ -15,7 +15,7 @@
 defined('_JEXEC') or die;
 
 /**
-* CreateTableClass configuration class.
+* CreateJoomlaView configuration class.
 *
 * @package JoomlaCliTools
 * @since 1.0

@@ -4,7 +4,7 @@
 *
 * @version $Id:
 * @package Matware.{OPTIONNAMEUCFIRST}
-* @copyright Copyright (C) 2004 - 2014 Matware. All rights reserved.
+* @copyright Copyright (C) 2004 - 2019 Matware. All rights reserved.
 * @author Matias Aguirre
 * @email maguirre@matware.com.ar
 * @link http://www.matware.com.ar/
@@ -14,14 +14,5 @@
 defined('_JEXEC') or die('Restricted Access');
 ?>
 <tr>
-	<th width="20">
-		<input type="checkbox" name="toggle" value="" onclick="checkAll(<?php echo count($this->items); ?>);" />
-	</th>
-	<th>
-		&nbsp;
-	</th>
-	{VIEWLISTHEAD}
-	<th width="5">
-		<?php echo JText::_('JGRID_HEADING_ID'); ?>
-	</th>
+	<td colspan="8"><?php echo $this->pagination->getListFooter(); ?></td>
 </tr>

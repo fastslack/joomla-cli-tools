@@ -4,7 +4,7 @@
 *
 * @version $Id:
 * @package Matware.{OPTIONNAMEUCFIRST}
-* @copyright Copyright (C) 2004 - 2014 Matware. All rights reserved.
+* @copyright Copyright (C) 2004 - 2019 Matware. All rights reserved.
 * @author Matias Aguirre
 * @email maguirre@matware.com.ar
 * @link http://www.matware.com.ar/
@@ -17,7 +17,7 @@ $user		= JFactory::getUser();
 $listOrder	= $this->escape($this->state->get('list.ordering'));
 $userId		= $user->get('id');
 
-foreach($this->items as $i => $item): 
+foreach($this->items as $i => $item):
 
 	$ordering   = ($listOrder == 't.id');
 	$canCreate  = $user->authorise('core.create',     'com_{OPTIONNAME}.{VIEWNAME}.'.$item->id);

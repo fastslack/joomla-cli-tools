@@ -1,16 +1,17 @@
 #!/usr/bin/php
 <?php
 /**
-* JoomlaCliTools
-*
-* @version $Id$
-* @package JoomlaCliTools
-* @subpackage CreateTableClass
-* @copyright Copyright 2004 - 2013 Matias Aguire. All rights reserved.
-* @license GNU General Public License version 2 or later.
-* @author Matias Aguirre <maguirre@matware.com.ar>
-* @link http://www.matware.com.ar
-*/
+ * JoomlaCliTools
+ *
+ * @version    $Id$
+ * @package    JoomlaCliTools
+ * @subpackage CreateJoomlaView
+ * @copyright  Copyright 2004 - 2019 Matias Aguirre. All rights reserved.
+ * @license    GNU General Public License version 2 or later.
+ * @author     Matias Aguirre <maguirre@matware.com.ar>
+ * @link       http://www.matware.com.ar
+ */
+
 // We are a valid Joomla entry point.
 define('_JEXEC', 1);
 
@@ -18,20 +19,20 @@ define('_JEXEC', 1);
 define('JPATH_BASE', dirname(__FILE__));
 
 // Bootstrap the application.
-require dirname(dirname(dirname(__FILE__))).'/bootstrap.php';
+require dirname(dirname(dirname(__FILE__))) . '/bootstrap.php';
 
 class CreateTableClass extends JApplicationCli
 {
 	/**
-	* Class constructor.
-	*
-	* @since 1.0.0
-	*/
+	 * Class constructor.
+	 *
+	 * @since 1.0.0
+	 */
 	public function __construct()
 	{
 		// Call the parent __construct method so it bootstraps the application class.
 		parent::__construct();
-	
+
 		// Getting the parameters
 		$this->params = new JRegistry(new JConfig);
 
@@ -42,13 +43,13 @@ class CreateTableClass extends JApplicationCli
 	/**
 	 * Execute
 	 *
-	 * @since	1.0.0
+	 * @since    1.0.0
 	 */
-  public function execute()
-  {
+	public function execute()
+	{
 
 		$query = "SHOW COLUMNS FROM {$this->get('table')}";
-		$this->_db->setQuery( $query );
+		$this->_db->setQuery($query);
 		$columns = $this->_db->loadObjectList();
 
 		$body = <<<EOD
@@ -63,16 +64,17 @@ class {$this->get('classname')} extends JTable {
 
 EOD;
 
-	for ($y=0;$y<count($columns);$y++) {
-		$column = &$columns[$y];
+		for ($y = 0; $y < count($columns); $y++)
+		{
+			$column = &$columns[$y];
 
-		$body .= <<<EOD
+			$body .= <<<EOD
 	/** @var {$column->Type} */
 	var \${$column->Field} = null;
 
 EOD;
 
-	}
+		}
 
 		$body .= <<<EOD
 
@@ -95,9 +97,9 @@ EOD;
 }
 EOD;
 
-	echo $body;
+		echo $body;
 
-  }
+	}
 
 } // end class
 

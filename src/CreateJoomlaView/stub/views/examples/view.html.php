@@ -1,21 +1,22 @@
 <?php
 /**
-* {OPTIONNAMEUCFIRST}
-*
-* @version $Id:
-* @package Matware.{OPTIONNAMEUCFIRST}
-* @copyright Copyright (C) 2004 - 2014 Matware. All rights reserved.
-* @author Matias Aguirre
-* @email maguirre@matware.com.ar
-* @link http://www.matware.com.ar/
-* @license GNU General Public License version 2 or later; see LICENSE
-*/
+ * {OPTIONNAMEUCFIRST}
+ *
+ * @version   $Id:
+ * @package   Matware.{OPTIONNAMEUCFIRST}
+ * @copyright Copyright (C) 2004 - 2019 Matware. All rights reserved.
+ * @author    Matias Aguirre
+ * @email     maguirre@matware.com.ar
+ * @link      http://www.matware.com.ar/
+ * @license   GNU General Public License version 2 or later; see LICENSE
+ */
+
 // Check to ensure this file is included in Joomla!
 defined('_JEXEC') or die();
 
-jimport( 'joomla.application.component.view' );
+use Joomla\CMS\MVC\View\HtmlView;
 
-class {VIEWLISTNAME} extends JViewLegacy {
+class {VIEWLISTNAME} extends HtmlView {
 
 	protected $items;
 
@@ -23,18 +24,19 @@ class {VIEWLISTNAME} extends JViewLegacy {
 
 	protected $state;
 
-	function display($tpl = null) {
-
-		$this->state		= $this->get('State');
-		$this->items = $this->get('Items');
-		$this->pagination = $this->get('Pagination');
+	function display($tpl = null)
+	{
+		$this->state         = $this->get('State');
+		$this->items         = $this->get('Items');
+		$this->pagination    = $this->get('Pagination');
 		$this->filterForm    = $this->get('FilterForm');
 		$this->activeFilters = $this->get('ActiveFilters');
 
 		// Check for errors.
-		if (count($errors = $this->get('Errors'))) 
+		if (count($errors = $this->get('Errors')))
 		{
 			JError::raiseError(500, implode('<br />', $errors));
+
 			return false;
 		}
 
@@ -45,14 +47,18 @@ class {VIEWLISTNAME} extends JViewLegacy {
 	}
 
 	/**
-	* Setting the toolbar
-	*/
-	protected function addToolBar() 
+	 * Add the page title and toolbar.
+	 *
+	 * @return void
+	 *
+	 * @throws Exception
+	 * @since  1.0.0
+	 */
+	protected function addToolBar()
 	{
 		$canDo = JHelperContent::getActions('com_{OPTIONNAME}', '{VIEWNAME}', $this->state->get('filter.published'));
-		$user  = JFactory::getUser();
 
-		JToolBarHelper::title(JText::_( 'COM_{OPTIONNAMEUPPER}_{VIEWNAMEUPPERPLURAL}_TITLE' ), 'plugin.png' );
+		JToolBarHelper::title(JText::_('COM_{OPTIONNAMEUPPER}_{VIEWNAMEUPPERPLURAL}_TITLE'), 'plugin.png');
 
 		if ($canDo->get('core.create'))
 		{

@@ -1,53 +1,63 @@
 <?php
 /**
-* {OPTIONNAMEUCFIRST}
-*
-* @version $Id:
-* @package Matware.{OPTIONNAMEUCFIRST}
-* @copyright Copyright (C) 2004 - 2014 Matware. All rights reserved.
-* @author Matias Aguirre
-* @email maguirre@matware.com.ar
-* @link http://www.matware.com.ar/
-* @license GNU General Public License version 2 or later; see LICENSE
-*/
+ * {OPTIONNAMEUCFIRST}
+ *
+ * @version   $Id:
+ * @package   Matware.{OPTIONNAMEUCFIRST}
+ * @copyright Copyright (C) 2004 - 2019 Matware. All rights reserved.
+ * @author    Matias Aguirre
+ * @email     maguirre@matware.com.ar
+ * @link      http://www.matware.com.ar/
+ * @license   GNU General Public License version 2 or later; see LICENSE
+ */
+
 // No direct access to this file
 defined('_JEXEC') or die('Restricted access');
-// import the Joomla modellist library
-jimport('joomla.application.component.modellist');
+
+use Joomla\CMS\Factory;
+use Joomla\CMS\Table\Table;
+use Joomla\CMS\MVC\Model\ListModel;
+use Joomla\CMS\Component\ComponentHelper;
+use Joomla\Utilities\ArrayHelper;
+
 /**
- * {MODELLISTNAME} Model
+ * {OPTIONNAMEUCFIRST} {COM_EXAMPLE_TAB_TITLE} Model
+ *
+ * @package  {OPTIONNAMEUCFIRST}
+ * @since    1.0.0
  */
-class {MODELLISTNAME} extends JModelList
+class {MODELLISTNAME} extends ListModel
 {
 	/**
 	 * Constructor.
 	 *
 	 * @param   array  An optional associative array of configuration settings.
-	 * @see     JController
-	 * @since   1.6
+	 * @see     ListModel
+	 * @since   1.0.0
 	 */
 	public function __construct($config = array())
 	{
 		if (empty($config['filter_fields']))
 		{
-{MODALFILTERLIST}
+			{MODALFILTERLIST}
 		}
 
 		parent::__construct($config);
 	}
 
 	/**
-	* Returns a reference to the a Table object, always creating it.
-	*
-	* @param       type    The table type to instantiate
-	* @param       string  A prefix for the table class name. Optional.
-	* @param       array   Configuration array for model. Optional.
-	* @return      JTable  A database object
-	* @since       2.5
-	*/
-	public function getTable($type = '{VIEWNAMEUCFIRST}', $prefix = '{OPTIONNAMEUCFIRST}Table', $config = array()) 
+	 * Returns a reference to the a Table object, always creating it.
+	 *
+	 * @param   type    The table type to instantiate
+	 * @param   string  A prefix for the table class name. Optional.
+	 * @param   array   Configuration array for model. Optional.
+	 *
+	 * @return  Table  A database object
+	 * @since   1.0.0
+	 */
+	public function getTable($type = '{VIEWNAMEUCFIRST}', $prefix = '{OPTIONNAMEUCFIRST}Table', $config = array())
 	{
-		return JTable::getInstance($type, $prefix, $config);
+		return Table::getInstance($type, $prefix, $config);
 	}
 
 	/**
@@ -55,7 +65,7 @@ class {MODELLISTNAME} extends JModelList
 	 *
 	 * Note. Calling getState in this method will result in recursion.
 	 *
-	 * @since   1.6
+	 * @since   1.0.0
 	 */
 	protected function populateState($ordering = null, $direction = null)
 	{
@@ -70,7 +80,7 @@ class {MODELLISTNAME} extends JModelList
 		$this->setState('filter.state', $published);
 
 		// Load the parameters.
-		$params = JComponentHelper::getParams('com_{OPTIONNAME}');
+		$params = ComponentHelper::getParams('com_{OPTIONNAME}');
 		$this->setState('params', $params);
 
 		// List state information.
@@ -84,9 +94,10 @@ class {MODELLISTNAME} extends JModelList
 	 * different modules that might need different sets of data or different
 	 * ordering requirements.
 	 *
-	 * @param   string  $id    A prefix for the store id.
+	 * @param   string  $id  A prefix for the store id.
+	 *
 	 * @return  string  A store id.
-	 * @since   1.6
+	 * @since   1.0.0
 	 */
 	protected function getStoreId($id = '')
 	{
@@ -99,22 +110,27 @@ class {MODELLISTNAME} extends JModelList
 	}
 
 	/**
-	* Method to build an SQL query to load the list data.
-	*
-	* @return      string  An SQL query
-	*/
+	 * Method to build an SQL query to load the list data.
+	 *
+	 * @return  string  An SQL query
+	 * @since   1.0.0
+	 */
 	protected function getListQuery()
 	{
-		// Create a new query object.           
-		$db = JFactory::getDBO();
+		// Create a new query object.
+		$db = Factory::getDBO();
+
 		$query = $db->getQuery(true);
+
 		// Select some fields
 		$query->select('*');
-		// From the hello table
+
+		// From the #__{OPTIONNAME}_{VIEWNAMEPLURAL} table
 		$query->from($db->quoteName('#__{OPTIONNAME}_{VIEWNAMEPLURAL}') . ' AS t');
 
 		// Filter by search in {PRIMARYNAME}
 		$search = $this->getState('filter.search');
+
 		if (!empty($search))
 		{
 			if (stripos($search, 'id:') === 0)
@@ -129,7 +145,7 @@ class {MODELLISTNAME} extends JModelList
 		}
 
 		// Add the list ordering clause.
-		$ordering = $this->state->get('list.fullordering');
+		$ordering = $this->state->get('list.fullordering', '{PRIMARYNAME} ASC');
 		$query->order($db->escape($ordering));
 
 		return $query;
@@ -142,11 +158,11 @@ class {MODELLISTNAME} extends JModelList
 	 *
 	 * @return  boolean  True if allowed to delete the record. Defaults to the permission for the component.
 	 *
-	 * @since   12.2
+	 * @since   1.0.0
 	 */
 	protected function canDelete($record)
 	{
-		$user = JFactory::getUser();
+		$user = Factory::getUser();
 		return $user->authorise('core.delete', $this->option);
 	}
 
@@ -154,13 +170,15 @@ class {MODELLISTNAME} extends JModelList
 	 * Method to delete groups.
 	 *
 	 * @param   array  An array of item ids.
+	 *
 	 * @return  boolean  Returns true on success, false on failure.
 	 */
 	public function delete($itemIds)
 	{
 		// Sanitize the ids.
 		$itemIds = (array) $itemIds;
-		JArrayHelper::toInteger($itemIds);
+
+		ArrayHelper::toInteger($itemIds);
 
 		// Get a group row instance.
 		$table = $this->getTable();
@@ -171,6 +189,7 @@ class {MODELLISTNAME} extends JModelList
 			if (!$table->delete($itemId))
 			{
 				$this->setError($table->getError());
+
 				return false;
 			}
 		}
