@@ -1,0 +1,24 @@
+{
+  "name": "fastslack/joomla-cli-tools",
+  "type": "joomla-package",
+  "description": "",
+  "keywords": [
+    "joomla",
+    "command",
+    "line",
+    "tools"
+  ],
+  "homepage": "https://github.com/fastslack/joomla-cli-tools",
+  "license": "GPL-2.0-or-later",
+  "version": "1.0",
+  "require": {
+    "joomla/filesystem": "^1.5",
+    "joomla/application": "^1.9",
+    "joomla/database": "^1.7"
+  },
+  "autoload": {
+    "psr-4": {
+      "JoomlaCliTools\\": "src/"
+    }
+  }
+}
