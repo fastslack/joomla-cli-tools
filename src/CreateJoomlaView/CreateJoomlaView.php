@@ -74,6 +74,12 @@ class CreateJoomlaView extends AbstractCliApplication
 		define('JPATH_BASE', $this->joomlapath);
 		define('JPATH_ROOT', $this->joomlapath);
 
+		if (($this->layer != 'admin' && $this->layer != 'site') || empty($this->xml) || empty($config) || empty($this->component))
+		{
+			$this->help();
+			$this->close();
+		}
+
 		// Get the component option
 		$this->option = substr($this->component, 4, strlen($this->component));
 
@@ -84,12 +90,6 @@ class CreateJoomlaView extends AbstractCliApplication
 		{
 			$this->out('ERROR: Joomla! configuration file not found');
 			$this->out('  Path: ' . $config);
-			$this->close();
-		}
-
-		if (($this->layer != 'admin' && $this->layer != 'site') || empty($this->xml) || empty($config) || empty($this->component))
-		{
-			$this->help();
 			$this->close();
 		}
 
