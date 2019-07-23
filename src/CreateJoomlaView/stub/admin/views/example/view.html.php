@@ -17,6 +17,7 @@ defined('_JEXEC') or die('Restricted access');
 use Joomla\CMS\Factory;
 use Joomla\CMS\MVC\View\HtmlView;
 use Joomla\CMS\Toolbar\ToolbarHelper;
+use Joomla\CMS\Language\Text;
 
 /**
  * {VIEWFORMNAME} View
@@ -30,21 +31,11 @@ class {VIEWFORMNAME} extends HtmlView
 	 */
 	public function display($tpl = null)
 	{
-		// get the Data
-		$form = $this->get('Form');
-		$item = $this->get('Item');
-
-		// Check for errors.
-		if (count($errors = $this->get('Errors')))
-		{
-			JError::raiseError(500, implode('<br />', $errors));
-
-			return false;
-		}
-
-		// Assign the Data
-		$this->form = $form;
-		$this->item = $item;
+		$this->form   = $this->get('Form');
+		$this->item   = $this->get('Item');
+		$this->state  = $this->get('State');
+		$this->return = Factory::getApplication()->input->get('return');
+		$this->canDo  = ContentHelper::getActions('com_{OPTIONNAME}');
 
 		// Set the toolbar
 		$this->addToolBar();
@@ -75,25 +66,4 @@ class {VIEWFORMNAME} extends HtmlView
 		ToolBarHelper::cancel('{VIEWNAME}.cancel', $isNew ? 'JTOOLBAR_CANCEL'
 				                                               : 'JTOOLBAR_CLOSE');
 	}
-
-	/**
-	 * Get HTML fieldset
-	 */
-	protected function getHtmlFieldSet($name) {
-
-		$fieldset = '<fieldset class="form-vertical"><div class="control-group form-inline">';
-
-		foreach($this->form->getFieldset($name) as $field)
-		{
-			$fieldset .= $field->label;
-			$fieldset .= '<div class="controls">';
-			$fieldset .= $field->input;
-			$fieldset .= '</div>';
-		}
-
-		$fieldset .= '</div></fieldset>';
-
-		return $fieldset;
-	}
-
 }
