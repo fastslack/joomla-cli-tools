@@ -15,16 +15,61 @@
 defined('_JEXEC') or die();
 
 use Joomla\CMS\MVC\View\HtmlView;
+use Joomla\CMS\Language\Text;
 
 class {VIEWLISTNAME} extends HtmlView {
 
+	/**
+	 * An array of items
+	 *
+	 * @var     array
+	 * @since   1.0.0
+	 */
 	protected $items;
 
+	/**
+	 * The pagination object
+	 *
+	 * @var     JPagination
+	 * @since   1.0.0
+	 */
 	protected $pagination;
 
+	/**
+	 * The model state
+	 *
+	 * @var     object
+	 * @since   1.0.0
+	 */
 	protected $state;
 
-	function display($tpl = null)
+	/**
+	 * Form object for search filters
+	 *
+	 * @var     JForm
+	 * @since   1.0.0
+	 */
+	public $filterForm;
+
+	/**
+	 * The active search filters
+	 *
+	 * @var     array
+	 * @since   1.0.0
+	 */
+	public $activeFilters;
+
+	/**
+	 * Display method of Opendays view
+	 *
+	 * @param   string  $tpl The template name
+	 *
+	 * @return string
+	 *
+	 * @since  1.0.0
+	 * @throws Exception
+	 */
+	public function display($tpl = null)
 	{
 		$this->state         = $this->get('State');
 		$this->items         = $this->get('Items');
