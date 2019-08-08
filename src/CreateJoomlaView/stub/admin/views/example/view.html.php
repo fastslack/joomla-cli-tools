@@ -17,10 +17,12 @@ defined('_JEXEC') or die('Restricted access');
 use Joomla\CMS\Factory;
 use Joomla\CMS\MVC\View\HtmlView;
 use Joomla\CMS\Toolbar\ToolbarHelper;
-use Joomla\CMS\Language\Text;
+use Joomla\CMS\Helper\ContentHelper;
 
 /**
  * {VIEWFORMNAME} View
+ *
+ * @since 1.0.0
  */
 class {VIEWFORMNAME} extends HtmlView
 {
@@ -28,6 +30,8 @@ class {VIEWFORMNAME} extends HtmlView
 	 * Display method of {VIEWFORMNAME} view
 	 *
 	 * @return null
+	 * @since  1.0.0
+	 * @throws Exception
 	 */
 	public function display($tpl = null)
 	{

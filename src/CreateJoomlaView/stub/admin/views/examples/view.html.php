@@ -14,8 +14,10 @@
 // Check to ensure this file is included in Joomla!
 defined('_JEXEC') or die();
 
+use Joomla\CMS\Helper\ContentHelper;
 use Joomla\CMS\MVC\View\HtmlView;
 use Joomla\CMS\Language\Text;
+use Joomla\CMS\Toolbar\ToolbarHelper;
 
 class {VIEWLISTNAME} extends HtmlView {
 
@@ -101,28 +103,28 @@ class {VIEWLISTNAME} extends HtmlView {
 	 */
 	protected function addToolBar()
 	{
-		$canDo = JHelperContent::getActions('com_{OPTIONNAME}', '{VIEWNAME}', $this->state->get('filter.published'));
+		$canDo = ContentHelper::getActions('com_{OPTIONNAME}', '{VIEWNAME}', $this->state->get('filter.published'));
 
-		JToolBarHelper::title(JText::_('COM_{OPTIONNAMEUPPER}_{VIEWNAMEUPPERPLURAL}_TITLE'), 'plugin.png');
+		ToolBarHelper::title(Text::_('COM_{OPTIONNAMEUPPER}_{VIEWNAMEUPPERPLURAL}_TITLE'), 'plugin.png');
 
 		if ($canDo->get('core.create'))
 		{
-			JToolbarHelper::addNew('{VIEWNAME}.add');
+			ToolBarHelper::addNew('{VIEWNAME}.add');
 		}
 
 		if (($canDo->get('core.edit')) || ($canDo->get('core.edit.own')))
 		{
-			JToolbarHelper::editList('{VIEWNAME}.edit');
+			ToolBarHelper::editList('{VIEWNAME}.edit');
 		}
 
 		if ($canDo->get('core.edit.state'))
 		{
-			JToolbarHelper::publish('{VIEWNAMEPLURAL}.publish', 'JTOOLBAR_PUBLISH', true);
-			JToolbarHelper::unpublish('{VIEWNAMEPLURAL}.unpublish', 'JTOOLBAR_UNPUBLISH', true);
+			ToolBarHelper::publish('{VIEWNAMEPLURAL}.publish', 'JTOOLBAR_PUBLISH', true);
+			ToolBarHelper::unpublish('{VIEWNAMEPLURAL}.unpublish', 'JTOOLBAR_UNPUBLISH', true);
 		}
 
-		JToolBarHelper::cancel('{VIEWNAMEPLURAL}.cancel', 'JTOOLBAR_CLOSE');
-		JToolBarHelper::spacer();
+		ToolBarHelper::cancel('{VIEWNAMEPLURAL}.cancel', 'JTOOLBAR_CLOSE');
+		ToolBarHelper::spacer();
 	}
 
 	/**
