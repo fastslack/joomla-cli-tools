@@ -74,7 +74,7 @@ class CreateJoomlaView extends AbstractCliApplication
 		define('JPATH_BASE', $this->joomlapath);
 		define('JPATH_ROOT', $this->joomlapath);
 
-		if (($this->layer != 'admin' && $this->layer != 'site') || empty($this->xml) || empty($config) || empty($this->component))
+		if (($this->layer != 'admin' && $this->layer != 'site') || empty($this->xml) || empty($this->component))
 		{
 			$this->help();
 			$this->close();
