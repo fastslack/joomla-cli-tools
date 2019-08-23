@@ -90,7 +90,7 @@ $sortFields = $this->getSortFields();
 						?>
 						<tr class="row<?php echo $i % 2; ?>">
 							<td>
-								<?php echo JHtml::_('grid.id', $i, $item->id); ?>
+								<?php echo HTMLHelper::_('grid.id', $i, $item->id); ?>
 							</td>
 							<td class="center" width="50">
 								<div class="btn-group">

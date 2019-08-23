@@ -69,6 +69,7 @@ class {MODELFORMNAME} extends AdminModel
 	 *
 	 * @return      mixed   The data for the form.
 	 * @since       1.0.0
+	 * @throws      Exception
 	 */
 	protected function loadFormData()
 	{
@@ -91,6 +92,7 @@ class {MODELFORMNAME} extends AdminModel
 	 * @return  boolean  True on success, False on error.
 	 *
 	 * @since   1.0.0
+	 * @throws  Exception
 	 */
 	public function save($data)
 	{

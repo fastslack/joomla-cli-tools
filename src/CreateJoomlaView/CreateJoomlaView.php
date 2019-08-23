@@ -3,8 +3,8 @@
 /**
  * JoomlaCliTools
  *
- * @version    $Id$
  * @package    JoomlaCliTools
+ * @version    $Id$
  * @subpackage CreateJoomlaView
  * @copyright  Copyright 2004 - 2019 Matias Aguirre. All rights reserved.
  * @license    GNU General Public License version 2 or later.
@@ -22,7 +22,11 @@ use Joomla\Database;
 use Joomla\Filesystem\File;
 use Joomla\String\Inflector;
 
-
+/**
+ * Create Joomla! View Script
+ *
+ * @since  1.0
+ */
 class CreateJoomlaView extends AbstractCliApplication
 {
 	/**
@@ -43,7 +47,7 @@ class CreateJoomlaView extends AbstractCliApplication
 		$this->joomlapath = "";
 
 		// Reverse array
-		$explode = explode("/", $this->xml);
+		$explode = explode("/", realpath($this->xml));
 		$explode = array_reverse($explode);
 
 		foreach ($explode as $key => $item)
@@ -194,28 +198,23 @@ class CreateJoomlaView extends AbstractCliApplication
 		// Declare the replace array
 		$this->replace = array();
 
-		$this->replace['VIEWNAME']            = $this->viewname;
-		$this->replace['VIEWNAMEPLURAL']      = $inflector->toPlural($this->viewname);
-		$this->replace['VIEWNAMEUPPER']       = strtoupper($this->viewname);
-		$this->replace['VIEWNAMEUPPERPLURAL'] = strtoupper($inflector->toPlural($this->viewname));
-		$this->replace['VIEWNAMEUCFIRST']     = ucfirst($this->viewname);
-
-		$this->replace['PRIMARYNAME'] = isset($this->primary) ? $this->primary : 'id';
-
-		$this->replace['OPTIONNAME']        = $this->option;
-		$this->replace['OPTIONNAMEUPPER']   = strtoupper($this->option);
-		$this->replace['OPTIONNAMEUCFIRST'] = ucfirst($this->option);
-
+		$this->replace['PRIMARYNAME']           = isset($this->primary) ? $this->primary : 'id';
+		$this->replace['VIEWNAME']              = $this->viewname;
+		$this->replace['VIEWNAMEPLURAL']        = $inflector->toPlural($this->viewname);
+		$this->replace['VIEWNAMEUPPER']         = strtoupper($this->viewname);
+		$this->replace['VIEWNAMEUPPERPLURAL']   = strtoupper($inflector->toPlural($this->viewname));
+		$this->replace['VIEWNAMEUCFIRST']       = ucfirst($this->viewname);
+		$this->replace['VIEWLISTNAME']          = ucfirst($this->option) . "View" . ucfirst($this->replace['VIEWNAMEPLURAL']);
+		$this->replace['VIEWFORMNAME']          = ucfirst($this->option) . "View" . ucfirst($this->viewname);
+		$this->replace['OPTIONNAME']            = $this->option;
+		$this->replace['OPTIONNAMEUPPER']       = strtoupper($this->option);
+		$this->replace['OPTIONNAMEUCFIRST']     = ucfirst($this->option);
+		$this->replace['CONTROLLERLISTNAME']    = ucfirst($this->option) . "Controller" . ucfirst($this->replace['VIEWNAMEPLURAL']);
+		$this->replace['CONTROLLERFORMNAME']    = ucfirst($this->option) . "Controller" . ucfirst($this->viewname);
+		$this->replace['MODELLISTNAME']         = ucfirst($this->option) . "Model" . ucfirst($this->replace['VIEWNAMEPLURAL']);
+		$this->replace['MODELFORMNAME']         = ucfirst($this->option) . "Model" . ucfirst($this->viewname);
+		$this->replace['TABLENAME']             = ucfirst($this->option) . "Table" . ucfirst($this->viewname);
 		$this->replace['COM_EXAMPLE_TAB_TITLE'] = ucfirst($this->replace['VIEWNAMEPLURAL']);
-
-		$this->replace['CONTROLLERLISTNAME'] = ucfirst($this->option) . "Controller" . ucfirst($this->replace['VIEWNAMEPLURAL']);
-		$this->replace['CONTROLLERFORMNAME'] = ucfirst($this->option) . "Controller" . ucfirst($this->viewname);
-		$this->replace['MODELLISTNAME']      = ucfirst($this->option) . "Model" . ucfirst($this->replace['VIEWNAMEPLURAL']);
-		$this->replace['MODELFORMNAME']      = ucfirst($this->option) . "Model" . ucfirst($this->viewname);
-		$this->replace['VIEWLISTNAME']       = ucfirst($this->option) . "View" . ucfirst($this->replace['VIEWNAMEPLURAL']);
-		$this->replace['VIEWFORMNAME']       = ucfirst($this->option) . "View" . ucfirst($this->viewname);
-
-		$this->replace['TABLENAME'] = ucfirst($this->option) . "Table" . ucfirst($this->viewname);
 
 		// Create the modal filter
 		$this->createModalFilter();
@@ -225,6 +224,9 @@ class CreateJoomlaView extends AbstractCliApplication
 
 		// Create the view list
 		$this->createViewList();
+
+		// Create the SQL select fields list
+		$this->createSQLSelectFields();
 
 		// Create the sql table
 		$this->createSQLTable();
@@ -360,6 +362,29 @@ class CreateJoomlaView extends AbstractCliApplication
 	}
 
 	/**
+	 * Create the SQL select fieldset
+	 *
+	 * @since    1.0.0
+	 */
+	public function createSQLSelectFields()
+	{
+		// Initialize select field variables
+		$this->replace['SQLSELECTFIELDS'] = $this->replace['SQLSELECTFIELDS2'] = "";
+
+		// Collect all select fields
+		foreach ($this->fields as $field)
+		{
+			$name = $field;
+
+			if ($name !== 'rules')
+			{
+				$this->replace['SQLSELECTFIELDS']  .= "\t\t\t\t\t'{$this->replace['VIEWNAMEPLURAL']}.{$name}',\n";
+				$this->replace['SQLSELECTFIELDS2'] .= "\t\t\t\t\t'{$name}',\n";
+			}
+		}
+	}
+
+	/**
 	 * createModalFilter
 	 *
 	 * @since    1.0.0
@@ -404,10 +429,6 @@ EOD;
 		$files[] = '/views/example/tmpl/edit.php';
 		$files[] = '/views/examples/view.html.php';
 		$files[] = '/views/examples/tmpl/default.php';
-		$files[] = '/views/examples/tmpl/default_body.php';
-		$files[] = '/views/examples/tmpl/default_foot.php';
-		$files[] = '/views/examples/tmpl/default_head.php';
-		$files[] = '/views/examples/tmpl/default_head.php';
 
 		return $files;
 	}
@@ -445,7 +466,7 @@ EOD;
 	/**
 	 * Method to get the correct mysql type
 	 *
-	 * @param    string  The Joomla! xml field type
+	 * @param   string  The Joomla! xml field type
 	 *
 	 * @return   string  The MySQL type
 	 *
@@ -469,7 +490,7 @@ EOD;
 			case 'int':
 			case 'hidden':
 			case 'sql':
-            case 'createdby':
+			case 'createdby':
 				$return = 'INT(11)';
 				break;
 		}

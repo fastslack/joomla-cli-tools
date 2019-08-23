@@ -126,10 +126,19 @@ class {MODELLISTNAME} extends ListModel
 		$query = $db->getQuery(true);
 
 		// Select some fields
-		$query->select('*');
+		$query->select(
+			$db->quoteName(
+				array(
+{SQLSELECTFIELDS}
+				),
+				array(
+{SQLSELECTFIELDS2}
+				)
+			)
+		):
 
 		// From the #__{OPTIONNAME}_{VIEWNAMEPLURAL} table
-		$query->from($db->quoteName('#__{OPTIONNAME}_{VIEWNAMEPLURAL}') . ' AS t');
+		$query->from($db->quoteName('#__{OPTIONNAME}_{VIEWNAMEPLURAL}') . ' AS {VIEWNAMEPLURAL}');
 
 		// Filter by search in {PRIMARYNAME}
 		$search = $this->getState('filter.search');
@@ -138,12 +147,12 @@ class {MODELLISTNAME} extends ListModel
 		{
 			if (stripos($search, 'id:') === 0)
 			{
-				$query->where('t.id = ' . (int) substr($search, 3));
+				$query->where('{VIEWNAMEPLURAL}.id = ' . (int) substr($search, 3));
 			}
 			else
 			{
 				$search = $db->quote('%' . $db->escape($search, true) . '%');
-				$query->where('t.{PRIMARYNAME} LIKE ' . $search);
+				$query->where('{VIEWNAMEPLURAL}.{PRIMARYNAME} LIKE ' . $search);
 			}
 		}
 
