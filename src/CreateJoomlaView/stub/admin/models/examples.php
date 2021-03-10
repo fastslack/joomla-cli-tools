@@ -31,7 +31,7 @@ class {MODELLISTNAME} extends ListModel
 	/**
 	 * Constructor.
 	 *
-	 * @param   array  An optional associative array of configuration settings.
+	 * @param   array $config An optional associative array of configuration settings.
 	 * @see     ListModel
 	 * @since   1.0.0
 	 */
@@ -48,9 +48,9 @@ class {MODELLISTNAME} extends ListModel
 	/**
 	 * Returns a reference to the a Table object, always creating it.
 	 *
-	 * @param   type    The table type to instantiate
-	 * @param   string  A prefix for the table class name. Optional.
-	 * @param   array   Configuration array for model. Optional.
+	 * @param   string $type   The table type to instantiate
+	 * @param   string $prefix A prefix for the table class name. Optional.
+	 * @param   array  $config Configuration array for model. Optional.
 	 *
 	 * @return  Table  A database object
 	 * @since   1.0.0
@@ -62,6 +62,9 @@ class {MODELLISTNAME} extends ListModel
 
 	/**
 	 * Method to auto-populate the model state.
+	 *
+	 * @param   string $ordering  The ordering field
+	 * @param   string $direction The ordering direction
 	 *
 	 * Note. Calling getState in this method will result in recursion.
 	 *

@@ -17,6 +17,11 @@ defined('_JEXEC') or die();
 use Joomla\CMS\Session\Session;
 use Joomla\CMS\MVC\Controller\AdminController;
 
+/**
+ * {COM_EXAMPLE_TAB_TITLE} list controller class.
+ *
+ * @since 1.0.0
+ */
 class {CONTROLLERLISTNAME} extends AdminController
 {
 	/**
@@ -56,7 +61,7 @@ class {CONTROLLERLISTNAME} extends AdminController
 	 *
 	 * @param   string  $key  The name of the primary key of the URL variable.
 	 *
-	 * @return  boolean  True if access level checks pass, false otherwise.
+	 * @return  void
 	 *
 	 * @since   1.0.0
 	 */

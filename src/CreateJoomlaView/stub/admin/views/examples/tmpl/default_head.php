@@ -12,6 +12,9 @@
 */
 // No direct access to this file
 defined('_JEXEC') or die('Restricted Access');
+
+use Joomla\CMS\Language\Text;
+
 ?>
 <tr>
 	<th width="20">
@@ -22,6 +25,6 @@ defined('_JEXEC') or die('Restricted Access');
 	</th>
 	{VIEWLISTHEAD}
 	<th width="5">
-		<?php echo JText::_('JGRID_HEADING_ID'); ?>
+		<?php echo Text::_('JGRID_HEADING_ID'); ?>
 	</th>
 </tr>

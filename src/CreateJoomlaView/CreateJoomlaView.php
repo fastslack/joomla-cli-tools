@@ -1,3 +1,4 @@
+#!/usr/bin/php
 <?php
 /**
  * JoomlaCliTools
@@ -12,6 +13,8 @@
  */
 
 namespace JoomlaCliTools;
+
+require_once dirname(dirname(__DIR__)) . '/vendor/autoload.php';
 
 use Joomla\Application\AbstractCliApplication;
 use Joomla\Registry\Registry;
@@ -32,13 +35,61 @@ class CreateJoomlaView extends AbstractCliApplication
 
 	protected function initialise()
 	{
-		$config        = $this->input->get('config', null, 'none');
-		$this->xmlfile = $this->input->get('xml', null, 'none');
+		$this->xml      = $this->input->get('xml', null, 'none');
+		$this->viewname = basename($this->xml, '.xml');
 
-		if (empty($this->xmlfile) || empty($config))
+		$flag             = false;
+		$this->layer      = "admin";
+		$this->joomlapath = "";
+
+		// Reverse array
+		$explode = explode("/", $this->xml);
+		$explode = array_reverse($explode);
+
+		foreach ($explode as $key => $item)
+		{
+			if (substr($item, 0, 4) === 'com_')
+			{
+				$this->component = $item;
+			}
+
+			if (isset($explode[$key - 1]) && $explode[$key - 1] == 'administrator' && $explode[$key - 2] == 'components')
+			{
+				$flag             = true;
+				$this->joomlapath = $item . "/" . $this->joomlapath;
+			}
+			else if (isset($explode[$key - 1]) && $explode[$key - 1] == 'components' && $item != 'administrator')
+			{
+				$flag             = true;
+				$this->layer      = 'site';
+				$this->joomlapath = $item . "/" . $this->joomlapath;
+			}
+			else if ($flag === true)
+			{
+				$this->joomlapath = $item . "/" . $this->joomlapath;
+			}
+		}
+
+		// Define JPATH_BASE
+		define('JPATH_BASE', $this->joomlapath);
+		define('JPATH_ROOT', $this->joomlapath);
+
+		if (($this->layer != 'admin' && $this->layer != 'site') || empty($this->xml) || empty($config) || empty($this->component))
 		{
 			$this->help();
+			$this->close();
+		}
 
+		// Get the component option
+		$this->option = substr($this->component, 4, strlen($this->component));
+
+		// Check if configuration.php exists
+		$config = $this->joomlapath . 'configuration.php';
+
+		if (!file_exists($config))
+		{
+			$this->out('ERROR: Joomla! configuration file not found');
+			$this->out('  Path: ' . $config);
 			$this->close();
 		}
 
@@ -49,21 +100,40 @@ class CreateJoomlaView extends AbstractCliApplication
 			$this->params = new Registry(new \JConfig);
 		}
 
-		// Make the database driver.
-		$dbFactory = new Database\DatabaseFactory;
+		if (!empty($this->params))
+		{
+			// Make the database driver.
+			$dbFactory = new Database\DatabaseFactory;
 
-		$this->db = $dbFactory->getDriver(
-			$this->params->get('dbtype'),
-			array(
-				'host'     => $this->params->get('host'),
-				'user'     => $this->params->get('user'),
-				'password' => $this->params->get('password'),
-				'port'     => $this->params->get('port'),
-				'socket'   => !empty($this->params->get('socket')) ? $this->params->get('socket') : '',
-				'database' => $this->params->get('db'),
-				'prefix'   => $this->params->get('dbprefix'),
-			)
-		);
+			$this->db = $dbFactory->getDriver(
+				$this->params->get('dbtype'),
+				array(
+					'host'     => $this->params->get('host'),
+					'user'     => $this->params->get('user'),
+					'password' => $this->params->get('password'),
+					'port'     => $this->params->get('port'),
+					'socket'   => !empty($this->params->get('socket')) ? $this->params->get('socket') : '',
+					'database' => $this->params->get('db'),
+					'prefix'   => $this->params->get('dbprefix'),
+				)
+			);
+		}
+	}
+
+	/**
+	 * Print help
+	 *
+	 * @return   void
+	 * @since    1.0.0
+	 */
+	public function help()
+	{
+		// Print help
+		$this->out(' Usage: CreateJoomlaView --xml example_form.xml');
+		$this->out();
+		$this->out(' Author: Matias Aguirre (maguirre@matware.com.ar)');
+		$this->out(' License: GNU/GPL http://www.gnu.org/licenses/gpl-2.0-standalone.html');
+		$this->out();
 	}
 
 	/**
@@ -74,7 +144,7 @@ class CreateJoomlaView extends AbstractCliApplication
 	public function doExecute()
 	{
 		// Read the xml form
-		$this->xml = simplexml_load_file($this->xmlfile);
+		$this->xml = simplexml_load_file($this->xml);
 
 		// Get the replace fields
 		$this->getReplaceList();
@@ -87,11 +157,6 @@ class CreateJoomlaView extends AbstractCliApplication
 		{
 			$this->replaceFile($file, $this->replace);
 		}
-
-		// Copy xml form to destination
-		$this->destpath = $this->params->get('webpath') . '/administrator/components/com_' . $this->params->get('option');
-
-		File::copy($this->xmlfile, $this->destpath . '/models/forms/' . $this->params->get('view') . '.xml');
 
 		// Set the languages strings
 		$this->replaceLanguage();
@@ -121,7 +186,7 @@ class CreateJoomlaView extends AbstractCliApplication
 			}
 
 			$this->fields[] = $name;
-			$this->table[] = array('name' => $name, 'type' => $type);
+			$this->table[]  = array('name' => $name, 'type' => $type);
 
 			unset($primary);
 		}
@@ -129,28 +194,28 @@ class CreateJoomlaView extends AbstractCliApplication
 		// Declare the replace array
 		$this->replace = array();
 
-		$this->replace['VIEWNAME']            = $this->params->get('view');
-		$this->replace['VIEWNAMEPLURAL']      = $inflector->toPlural($this->params->get('view'));
-		$this->replace['VIEWNAMEUPPER']       = strtoupper($this->params->get('view'));
-		$this->replace['VIEWNAMEUPPERPLURAL'] = strtoupper($inflector->toPlural($this->params->get('view')));
-		$this->replace['VIEWNAMEUCFIRST']     = ucfirst($this->params->get('view'));
+		$this->replace['VIEWNAME']            = $this->viewname;
+		$this->replace['VIEWNAMEPLURAL']      = $inflector->toPlural($this->viewname);
+		$this->replace['VIEWNAMEUPPER']       = strtoupper($this->viewname);
+		$this->replace['VIEWNAMEUPPERPLURAL'] = strtoupper($inflector->toPlural($this->viewname));
+		$this->replace['VIEWNAMEUCFIRST']     = ucfirst($this->viewname);
 
-		$this->replace['PRIMARYNAME'] = $this->primary;
+		$this->replace['PRIMARYNAME'] = isset($this->primary) ? $this->primary : 'id';
 
-		$this->replace['OPTIONNAME']        = $this->params->get('option');
-		$this->replace['OPTIONNAMEUPPER']   = strtoupper($this->params->get('option'));
-		$this->replace['OPTIONNAMEUCFIRST'] = ucfirst($this->params->get('option'));
+		$this->replace['OPTIONNAME']        = $this->option;
+		$this->replace['OPTIONNAMEUPPER']   = strtoupper($this->option);
+		$this->replace['OPTIONNAMEUCFIRST'] = ucfirst($this->option);
 
 		$this->replace['COM_EXAMPLE_TAB_TITLE'] = ucfirst($this->replace['VIEWNAMEPLURAL']);
 
-		$this->replace['CONTROLLERLISTNAME'] = ucfirst($this->params->get('option')) . "Controller" . ucfirst($this->replace['VIEWNAMEPLURAL']);
-		$this->replace['CONTROLLERFORMNAME'] = ucfirst($this->params->get('option')) . "Controller" . ucfirst($this->params->get('view'));
-		$this->replace['MODELLISTNAME']      = ucfirst($this->params->get('option')) . "Model" . ucfirst($this->replace['VIEWNAMEPLURAL']);
-		$this->replace['MODELFORMNAME']      = ucfirst($this->params->get('option')) . "Model" . ucfirst($this->params->get('view'));
-		$this->replace['VIEWLISTNAME']       = ucfirst($this->params->get('option')) . "View" . ucfirst($this->replace['VIEWNAMEPLURAL']);
-		$this->replace['VIEWFORMNAME']       = ucfirst($this->params->get('option')) . "View" . ucfirst($this->params->get('view'));
+		$this->replace['CONTROLLERLISTNAME'] = ucfirst($this->option) . "Controller" . ucfirst($this->replace['VIEWNAMEPLURAL']);
+		$this->replace['CONTROLLERFORMNAME'] = ucfirst($this->option) . "Controller" . ucfirst($this->viewname);
+		$this->replace['MODELLISTNAME']      = ucfirst($this->option) . "Model" . ucfirst($this->replace['VIEWNAMEPLURAL']);
+		$this->replace['MODELFORMNAME']      = ucfirst($this->option) . "Model" . ucfirst($this->viewname);
+		$this->replace['VIEWLISTNAME']       = ucfirst($this->option) . "View" . ucfirst($this->replace['VIEWNAMEPLURAL']);
+		$this->replace['VIEWFORMNAME']       = ucfirst($this->option) . "View" . ucfirst($this->viewname);
 
-		$this->replace['TABLENAME'] = ucfirst($this->params->get('option')) . "Table" . ucfirst($this->params->get('view'));
+		$this->replace['TABLENAME'] = ucfirst($this->option) . "Table" . ucfirst($this->viewname);
 
 		// Create the modal filter
 		$this->createModalFilter();
@@ -175,13 +240,13 @@ class CreateJoomlaView extends AbstractCliApplication
 	public function replaceLanguage()
 	{
 		// Get the content of the file
-		if (file_exists($this->params->get('webpath') . "/administrator/language/en-GB/en-GB.com_{$this->replace['OPTIONNAME']}.ini"))
+		if (file_exists($this->joomlapath . "/administrator/language/en-GB/en-GB.com_{$this->replace['OPTIONNAME']}.ini"))
 		{
-			$buffer = file_get_contents($this->params->get('webpath') . "/administrator/language/en-GB/en-GB.com_{$this->replace['OPTIONNAME']}.ini");
+			$buffer = file_get_contents($this->joomlapath . "/administrator/language/en-GB/en-GB.com_{$this->replace['OPTIONNAME']}.ini");
 		}
-		else if (file_exists($this->params->get('webpath') . "/administrator/components/com_{$this->replace['OPTIONNAME']}/language/en-GB/en-GB.com_{$this->replace['OPTIONNAME']}.ini"))
+		else if (file_exists($this->joomlapath . "/administrator/components/com_{$this->replace['OPTIONNAME']}/language/en-GB/en-GB.com_{$this->replace['OPTIONNAME']}.ini"))
 		{
-			$buffer = file_get_contents($this->params->get('webpath') . "/administrator/components/com_{$this->replace['OPTIONNAME']}/language/en-GB/en-GB.com_{$this->replace['OPTIONNAME']}.ini");
+			$buffer = file_get_contents($this->joomlapath . "/administrator/components/com_{$this->replace['OPTIONNAME']}/language/en-GB/en-GB.com_{$this->replace['OPTIONNAME']}.ini");
 		}
 
 		if (empty($buffer))
@@ -206,7 +271,7 @@ class CreateJoomlaView extends AbstractCliApplication
 		$buffer .= "\nCOM_{$this->replace['OPTIONNAMEUPPER']}_{$this->replace['VIEWNAMEUPPERPLURAL']}_TITLE=\"\"";
 
 		// Write to file
-		return File::write($this->params->get('webpath') . "/administrator/language/en-GB/en-GB.com_{$this->replace['OPTIONNAME']}.ini", $buffer);
+		return File::write($this->joomlapath . "/administrator/language/en-GB/en-GB.com_{$this->replace['OPTIONNAME']}.ini", $buffer);
 	}
 
 	/**
@@ -217,7 +282,7 @@ class CreateJoomlaView extends AbstractCliApplication
 	public function replaceFile($file, $list)
 	{
 		// Get the content of the file
-		$buffer = file_get_contents(__DIR__ . "/stub" . $file);
+		$buffer = file_get_contents(__DIR__ . "/stub/{$this->layer}/{$file}");
 
 		// Replace the defined content
 		foreach ($list as $key => $value)
@@ -227,14 +292,12 @@ class CreateJoomlaView extends AbstractCliApplication
 
 		// Replace the name of the views
 		$file = str_replace("examples", "{$this->replace['VIEWNAMEPLURAL']}", $file);
-		$file = str_replace("example", "{$this->params->get('view')}", $file);
+		$file = str_replace("example", "{$this->viewname}", $file);
 
 		// Set the correct destination pathfile
-		$destfile = $this->params->get('webpath') . '/administrator/components/com_' . $this->params->get('option') . $file;
+		$destfile = $this->joomlapath . '/administrator/components/' . $this->component . $file;
 
 		return File::write($destfile, $buffer);
-
-		return true;
 	}
 
 	/**
@@ -360,18 +423,17 @@ EOD;
 	{
 		// Create the modal filter
 		$buffer = "";
-		$table = "#__{$this->params->get('option')}_{$this->replace['VIEWNAMEPLURAL']}";
+		$table  = "#__{$this->option}_{$this->replace['VIEWNAMEPLURAL']}";
 
 		foreach ($this->table as $t)
 		{
-			$type = $this->getMySqlType($t['type']);
+			$type   = $this->getMySqlType($t['type']);
 			$buffer .= "\t`{$t['name']}` {$type},\n";
 		}
 
-		$buffer .= "\tconstraint {$table}_pk\n";
-		$buffer .= "\tprimary key ({$this->table[0]['name']})\n";
+		$buffer .= "\tPRIMARY KEY (`{$this->table[0]['name']}`)\n";
 
-		$table = "#__{$this->params->get('option')}_{$this->replace['VIEWNAMEPLURAL']}";
+		$table = "#__{$this->option}_{$this->replace['VIEWNAMEPLURAL']}";
 
 		$this->replace['SQLTABLE'] = <<<EOD
 CREATE TABLE {$table} (
@@ -391,16 +453,23 @@ EOD;
 	 */
 	public function getMySqlType($xmltype)
 	{
+		$return = '';
+
 		switch ($xmltype)
 		{
 			case 'text':
 				$return = 'VARCHAR(100)';
+				break;
+			case 'textarea':
+				$return = 'TEXT';
 				break;
 			case 'calendar':
 				$return = 'DATETIME';
 				break;
 			case 'int':
 			case 'hidden':
+			case 'sql':
+            case 'createdby':
 				$return = 'INT(11)';
 				break;
 		}
@@ -408,5 +477,17 @@ EOD;
 		return $return;
 	}
 
-} // end class
+}
 
+// Wrap the execution in a try statement to catch any exceptions thrown anywhere in the script.
+try
+{
+	$app = new CreateJoomlaView;
+	$app->execute();
+}
+catch (Exception $e)
+{
+	// An exception has been caught, just echo the message.
+	fwrite(STDOUT, $e->getMessage() . "\n");
+	exit($e->getCode());
+}
