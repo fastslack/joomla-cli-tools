@@ -1,0 +1,172 @@
+#!/usr/bin/php
+<?php
+/**
+* JoomlaCliTools
+*
+* @version $Id$
+* @package JoomlaCliTools
+* @subpackage ComponentManager
+* @copyright Copyright 2004 - 2013 Matias Aguirre. All rights reserved.
+* @license GNU General Public License version 2 or later.
+* @author Matias Aguirre <maguirre@matware.com.ar>
+* @link http://www.matware.com.ar
+*/
+// We are a valid Joomla entry point.
+define('_JEXEC', 1);
+
+// Setup the base path related constant.
+define('JPATH_BASE', dirname(__FILE__));
+
+// Bootstrap the application.
+require dirname(dirname(__FILE__)).'/bootstrap.php';
+
+class ComponentManager extends JApplicationCli
+{
+	/**
+	* Ascii color array
+	*
+	* @var array
+	* @since 1.0
+	*/
+	public $_c = array(
+		'LIGHT_RED'   => "\033[1;31m",
+		'LIGHT_GREEN' => "\033[1;32m",
+		'YELLOW'      => "\033[1;33m",
+		'LIGHT_BLUE'  => "\033[1;34m",
+		'MAGENTA'     => "\033[1;35m",
+		'LIGHT_CYAN'  => "\033[1;36m",
+		'WHITE'       => "\033[1;37m",
+		'NORMAL'      => "\033[0m",
+		'BLACK'       => "\033[0;30m",
+		'RED'         => "\033[0;31m",
+		'GREEN'       => "\033[0;32m",
+		'BROWN'       => "\033[0;33m",
+		'BLUE'        => "\033[0;34m",
+		'CYAN'        => "\033[0;36m",
+		'BOLD'        => "\033[1m",
+		'UNDERSCORE'  => "\033[4m",
+		'REVERSE'     => "\033[7m",
+	);
+
+	/**
+	* Class constructor.
+	*
+	* @return void
+	*
+	* @since 2.5.0
+	*/
+	public function __construct()
+	{
+		// Call the parent __construct method so it bootstraps the application class.
+		parent::__construct();
+	
+		// Getting the parameters
+		$this->params = new JRegistry(new JConfig);
+
+		// Creating first dabatase instance
+		$this->_db = JFactory::getDBO();
+
+	}
+
+	/**
+	 * Screen
+	 *
+	 * @return	none
+	 * @since	2.5.0
+	 */
+	public function screen()
+	{
+		// Print help
+		$this->out();
+		$this->out(' ComponentManager v1.0');
+		$this->out(' Usage: ComponentManager [--create name] [--create-db name] [--link element]');
+		$this->out();
+		$this->out(' Author: Matias Aguirre (maguirre@matware.com.ar)');
+		$this->out(' License: GNU/GPL http://www.gnu.org/licenses/gpl-2.0-standalone.html');
+		$this->out();
+		exit;
+	}
+
+	/**
+	 * Execute
+	 *
+	 * @since	1.0
+	 */
+	public function execute()
+	{
+		$create = $this->input->get('create');
+		$createdb = $this->input->get('create-db');
+
+/*
+		if (empty($backup) && empty($diff)) {
+			$this->screen();
+		}
+
+		if (!empty($backup)) {
+			$this->out("\nWARNING! Remember that your second database will be rewritted! Agree? yes/no");
+			$in = $this->in();
+			if ($in == 'yes') {
+				$this->createBackup();
+			}
+		}
+
+		if (!empty($diff)) {
+			$this->createDiff();
+		}
+*/
+
+	} // end method
+
+  public function createComponentDB()
+  {
+			jimport('joomla.table.extension');
+
+			// Inserting extension
+			$extension = new JTableExtension($this->db);
+			$extension->name = $this->_config->get('dest_name');
+			$extension->element = 'com_'.$this->_config->get('dest_name');
+			$extension->type = 'component';
+			$extension->client_id = 1;
+
+			$extension->store();
+
+			// Inserting menu
+			$menu = new JTableMenu($this->db);
+			$menu->menutype = 'menu';
+			$menu->title = 'com_'.$this->_config->get('dest_name');
+			$menu->alias = $this->_config->get('dest_class');
+			$menu->path = $this->_config->get('dest_class');
+			$menu->link = 'index.php?option=com_'.$this->_config->get('dest_name');
+			$menu->type = 'component';
+			$menu->img = 'class:'.$this->_config->get('dest_name');
+			$menu->published = 1;
+			$menu->parent_id = 1;
+			$menu->level = 1;
+			$menu->component_id = $this->db->insertid();
+			$menu->access = 1;
+			$menu->language = '*';
+			$menu->client_id = 1;
+
+			$menu->setLocation(1, 'last-child');
+
+			$menu->store();
+
+
+	} // end method
+
+
+} // end class
+
+// Wrap the execution in a try statement to catch any exceptions thrown anywhere in the script.
+try
+{
+	// Instantiate the application object, passing the class name to JCli::getInstance
+	// and use chaining to execute the application.
+	JApplicationCli::getInstance('ComponentManager')->execute();
+}
+catch (Exception $e)
+{
+	// An exception has been caught, just echo the message.
+	fwrite(STDOUT, $e->getMessage() . "\n");
+	exit($e->getCode());
+}
