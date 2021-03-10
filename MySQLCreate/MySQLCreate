@@ -1,15 +1,15 @@
 #!/usr/bin/php
 <?php
 /**
- * JoomlaCliTools
- *
- * @version    $Id$
- * @package    JoomlaCliTools
- * @copyright  Copyright 2021 Matias Aguirre. All rights reserved.
- * @license    GNU General Public License version 2 or later.
- * @author     Matias Aguirre <maguirre@matware.com.ar>
- * @link       https://matware.com.ar
- */
+* JoomlaCliTools
+*
+* @version    $Id$
+* @package    JoomlaCliTools
+* @copyright  Copyright 2021 Matias Aguirre. All rights reserved.
+* @license    GNU General Public License version 2 or later.
+* @author     Matias Aguirre <maguirre@matware.com.ar>
+* @link       https://matware.com.ar
+*/
 
 // We are a valid Joomla entry point.
 define('_JEXEC', 1);
@@ -20,7 +20,7 @@ define('JPATH_BASE', dirname(__FILE__));
 // Bootstrap the application.
 require dirname(dirname(__FILE__)).'/bootstrap.php';
 
-class CreateQuery extends JApplicationCli
+class MySQLCreate extends JApplicationCli
 {
 	/**
 	* Class constructor.
@@ -34,12 +34,13 @@ class CreateQuery extends JApplicationCli
 		// Call the parent __construct method so it bootstraps the application class.
 		parent::__construct();
 
-		// Getting the parameters
-		$this->params = new JRegistry(new JConfig);
-
 		// Creating first dabatase instance
 		$this->_db = JFactory::getDBO();
+
+		// Getting the parameters
+		$this->params = new JRegistry(new JConfig);
 	}
+
 
 	/**
 	 * Execute
@@ -49,25 +50,31 @@ class CreateQuery extends JApplicationCli
 	 */
 	public function execute()
 	{
-		/*
-		 * Getting the first table columns and create a query field
-		 */
-		$query = "SHOW COLUMNS FROM {$this->get('table')}";
-		$this->_db->setQuery( $query );
-		$columns = $this->_db->loadObjectList();
+		$schema = $this->input->get('schema');
 
-		$output = "( ";
-
-		$count = count($columns);
-		for($i=0;$i<$count;$i++) {
-			$output .= "`".$columns[$i]->Field."`";
-
-			$output .= ($i != $count-1) ? ", " : "";
+		if (!empty($schema)) {
+			$this->createSchema();
 		}
 
-		$output .= " )\n";
 
-		echo $output;
+		//print_r($this->input->get('table'));
+
+	} // end method
+
+	/**
+	 * Execute
+	 *
+	 * @return	none
+	 * @since	2.5.0
+	 */
+	public function createSchema()
+	{
+
+		// Reading the file
+		$read = JFile::read('sql/'.$tables[$y].'.diff');
+		//$read = explode("\n", $read);
+
+		//print_r($this->input->get('table'));
 
 	} // end method
 
@@ -78,7 +85,7 @@ try
 {
 	// Instantiate the application object, passing the class name to JCli::getInstance
 	// and use chaining to execute the application.
-	JApplicationCli::getInstance('CreateQuery')->execute();
+	JApplicationCli::getInstance('MySQLCreate')->execute();
 }
 catch (Exception $e)
 {

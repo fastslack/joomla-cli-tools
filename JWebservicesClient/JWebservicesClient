@@ -1,0 +1,162 @@
+#!/usr/bin/php
+<?php
+/**
+* JoomlaCliTools
+*
+* @version $Id$
+* @package JoomlaCliTools
+* @subpackage JWebservicesClient
+* @copyright Copyright 2004 - 2013 Matias Aguire. All rights reserved.
+* @license GNU General Public License version 2 or later.
+* @author Matias Aguirre <maguirre@matware.com.ar>
+* @link http://www.matware.com.ar
+*/
+// We are a valid Joomla entry point.
+define('_JEXEC', 1);
+
+// Setup the base path related constant.
+define('JPATH_BASE', dirname(__FILE__));
+
+// Bootstrap the application.
+require dirname(dirname(__FILE__)).'/bootstrap.php';
+
+// Import the JHTTP libraries
+jimport('joomla.http.http');
+
+class JWebservicesClient extends JApplicationCli
+{
+	/**
+	 * @var    ROAuth2Client  OAuth client for the Google authentication object.
+	 * @since  1.0
+	 */
+	public $client;
+
+	/**
+	 * @var    JHttp  Joomla! HTTP Class
+	 * @since  1.0
+	 */
+	protected $http;
+
+	/**
+	* Class constructor.
+	*
+	* @return void
+	*
+	* @since 1.0
+	*/
+	public function __construct(JRegistry $options = null, JOAuth2Client $client = null)
+	{
+		// Call the parent __construct method so it bootstraps the application class.
+		parent::__construct();
+
+		// Set the custom options if exists
+		$this->options = isset($options) ? $options : new JRegistry(new JConfig);
+
+		// Prevent Joomla! libraries error
+		// PHP Notice:  Undefined index: HTTP_HOST
+		$_SERVER['HTTP_HOST'] = null;	
+
+		// Creating first dabatase instance
+		$this->_db = JFactory::getDBO();
+
+		// JHttp instance
+		$this->http = new JHttp();
+
+		// Add the logger.
+		JLog::addLogger(
+			// Pass an array of configuration options
+			array(
+				// Set the name of the log file
+				'text_file' => JPATH_BASE.'/logs/JWebservicesClient.log.php'
+			)
+		);	
+	}
+
+	/**
+	 * execute
+	 *
+	 * @return	none
+	 * @since	1.0
+	 */
+  public function execute()
+  {
+		$options = array();
+
+		// Get the url
+		$url = $this->options->get('url');
+		// Method
+		$method = $this->options->get('method');
+
+		$options = array();
+
+		$username = $this->options->get('username');
+		$method = $this->options->get('method');
+
+		// Initialise the OAuth 2.0 client
+		$client = new MClientOAuth2($this->options);
+		// Send the initial session request
+		$client->setOption('url', $this->options->get('hostname').'/api/mets:checkspaces');
+
+		if (empty($access_token))
+		{
+			$access_token = $client->fetchAccessToken()->access_token;
+		}
+
+		$options['oauth_access_token'] = $access_token;
+		$options['oauth_client_id'] = base64_encode($username);
+
+		$resource = $client->getResource($options);
+
+
+/*
+		switch ($method) {
+				case 'GET':
+
+					// Request the resource
+					$response = $this->http->get($url);
+
+					// Decode JSON+HAL resource
+					//$resourceObj = json_decode($response->body);
+					print_r($response);
+
+					break;
+				case 'POST':
+
+					// Resource to insert
+					$resource = $this->options->get('resource');
+
+					$resource = array('_hal' => $resource);
+
+					// Request the resource
+					$response = $this->http->post($url, $resource);
+
+					// Decode JSON+HAL resource
+					//$resourceObj = json_decode($response->body);
+					print_r($response);
+
+					break;
+				case 'PUT':
+				    echo "nothing";
+				    break;
+				case 'DELETE':
+				    echo "nothing";
+				    break;
+		}
+*/
+
+	}
+}
+
+// Wrap the execution in a try statement to catch any exceptions thrown anywhere in the script.
+try
+{
+	// Instantiate the application object, passing the class name to JApplicationCli::getInstance
+	// and use chaining to execute the application.
+	JApplicationCli::getInstance('JWebservicesClient')->execute();
+}
+catch (Exception $e)
+{
+	// An exception has been caught, just echo the message.
+	fwrite(STDOUT, $e->getMessage() . "\n");
+	exit($e->getCode());
+}

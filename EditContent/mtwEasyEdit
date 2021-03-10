@@ -1,0 +1,280 @@
+#!/usr/bin/php
+<?php
+/**
+ * @version		    $Id: 
+ * @package		    mtwEasyEdit
+ * @subpackage	  mtwEasyEditCli
+ * @copyright			CopyRight 2011 Matware All rights reserved.
+ * @author				Matias Aguirre
+ * @email   			maguirre@matware.com.ar
+ * @link					http://www.matware.com.ar/
+ * @license				GNU/GPL http://www.gnu.org/licenses/gpl-2.0-standalone.html
+ */
+// We are a valid Joomla entry point.
+define('_JEXEC', 1);
+
+// Bootstrap the application.
+require './bootstrap.php';
+
+class mtwEasyEditCli extends JApplicationCli
+{
+	/**
+	* A database object for the application to use.
+	*
+	* @var JDatabase
+	* @since 0.0.1
+	*/
+	protected $dbo = null;
+	/**
+	 * The additional arguments passed to the script that are not associated
+	 * with a specific argument name.
+	 *
+	 * @var    array
+	 * @since 0.0.1
+	 */
+	protected $args = array();
+
+	/**
+	* Class constructor.
+	*
+	* @return void
+	*
+	* @since 0.0.1
+	*/
+	public function __construct()
+	{
+		// Call the parent __construct method so it bootstraps the application class.
+		parent::__construct();
+
+
+
+		//$value = $this->input->get('download', 0, 'int');
+
+		//$type = gettype($value);
+		//var_dump($type);
+
+//echo count($this->input->data);
+
+		//$this->args = $this->input->getArgs();
+
+		//$ar
+//print_r($this->args);
+/*
+		$this->args = $this->input->getArgs();
+
+print_r($this->args);
+*/
+
+/*
+		$args = 
+
+
+
+		foreach ($this->args as $k => $v)
+		{
+				if ($k == 'download' || $k == 'download-section' || $k == 'download-category' ||
+						$k == 'update' || $k == 'update-all') {
+					continue;
+				}
+		}
+*/
+
+	
+		$this->args['download'] = $this->input->get('download', 0, 'int', false);
+
+		$this->args['download-section'] = $this->input->get('download-section', 0, 'bool');
+		$this->args['download-category'] = $this->input->get('download-category', 0, 'bool');
+
+//$args = $this->input->get('args', 0, 'int', false);
+//echo gettype($args);
+//echo "\n";
+
+//var_dump($this->args['download']);
+
+
+		//$type = gettype($this->args['download']);
+
+//echo "Value: {$this->args['download']} -- {$type} \n";
+
+
+
+		$this->args['upload'] = $this->input->get('upload', 0);
+		$this->args['upload-all'] = $this->input->get('upload-all', 0);
+
+/*
+		if ( $this->args['download'] < 1 || $this->args['download-section'] < 1 || $this->args['download-category'] < 1 ) {
+				$this->help();
+				exit;
+		}
+*/
+
+/*
+		if ( $this->args['upload'] < 1 ) {
+				$this->help();
+				exit;
+		}
+*/
+//echo "\n";
+//exit;
+
+		// Add the logger.
+		JLog::addLogger(
+			// Pass an array of configuration options
+			array(
+				// Set the name of the log file
+				'text_file' => JPATH_SITE.'/logs/mtweasyedit.log.php'
+			)
+		);
+
+		// Note, this will throw an exception if there is an error
+		// creating the database connection.
+
+		$this->dbo = JDatabase::getInstance(
+			array(
+				'driver' => $this->get('dbtype'),
+				'host' => $this->get('host'),
+				'user' => $this->get('user'),
+				'password' => $this->get('password'),
+				'database' => $this->get('db'),
+				'prefix' => $this->get('dbprefix'),
+			)
+		);
+
+		// Print a message
+		$this->out();
+		$this->out(' mtwEasyEdit v0.0.1');
+		$this->out();
+	}
+
+	/**
+	 * Help
+	 *
+	 * @return	none
+	 * @since	0.0.1
+	 */
+  public function help()
+	{
+		// Print help
+		$this->out(' Usage: mtwEasyEdit --download [id]');
+		$this->out('                    --download-section [sid]');
+		$this->out('                    --download-category [cid]');
+		$this->out('        mtwEasyEdit --upload [id]');
+		$this->out('                    --upload-all');
+		$this->out();
+		$this->out(' Author: Matias Aguirre (maguirre@matware.com.ar)');
+		$this->out(' License: GNU/GPL http://www.gnu.org/licenses/gpl-2.0-standalone.html');
+		$this->out();
+	}
+
+	/**
+	 * execute
+	 *
+	 * @return	none
+	 * @since	0.0.1
+	 */
+  public function execute()
+  {
+		if ($this->args['download'] != 1) {
+			$this->download($this->args['download']);
+		}else{
+			$this->help();
+		}
+
+		// Import the user database if exists
+		$upload = $this->input->get('upload');
+
+		if ($upload) {
+			$this->upload($upload);
+		}
+	} // end method
+
+	/**
+	 * download
+	 *
+	 * @return	none
+	 * @since	0.0.1
+	 */
+	public function download($download)
+	{
+		// Getting the content
+		$query = "SELECT * FROM #__content WHERE id = {$download}";
+		$this->dbo->setQuery($query);
+		$contents = $this->dbo->loadObjectList();
+
+		// Check for query error.
+		$error = $this->dbo->getErrorMsg();
+
+		if ($error) {
+			throw new Exception($error);
+		}
+
+		for ($i=0;$i<count($contents);$i++) {
+			$content = &$contents[$i];
+
+			$this->out('Sync: '.$content->title);
+			
+			//$data = $content->introtext.$content->fulltext;
+			$data = $content->fulltext;
+			$file = JPATH_SYNC.'/'.$content->alias.'-'.$content->alias.'.html';
+
+			if (JFile::exists($file)) {
+				JFile::delete($file);
+			}
+
+			// Create the file
+			JFile::write($file, $data);
+		}
+	} // end method
+
+	/**
+	 * Upload
+	 *
+	 * @return	none
+	 * @since	0.0.1
+	 */
+	public function upload($upload)
+	{
+
+		// Read the files
+		$files = JFolder::files(JPATH_SYNC);
+
+		for ($i=0;$i<count($files);$i++) {
+			$file = &$files[$i];
+
+			$alias = JFile::stripExt($file);
+			$data = JFile::read(JPATH_SYNC.'/'.$file);
+			//$data = $this->dbo->quote($data);
+			$data = str_replace("'", "&#039;", $data); 
+
+			// Getting the content
+			$query = "UPDATE `#__content` SET `fulltext` = '{$data}' WHERE id = {$upload}";
+			$this->dbo->setQuery($query);
+			$result = $this->dbo->query();
+
+			// Check for query error.
+			$error = $this->dbo->getErrorMsg();
+
+			if ($error) {
+				throw new Exception($error);
+			}else{
+				$this->out("Updated: {$alias}");
+			}
+		}
+
+	} // end method
+
+} // end class
+
+// Wrap the execution in a try statement to catch any exceptions thrown anywhere in the script.
+try
+{
+	// Instantiate the application object, passing the class name to JCli::getInstance
+	// and use chaining to execute the application.
+	JApplicationCli::getInstance('mtwEasyEditCli')->execute();
+}
+catch (Exception $e)
+{
+	// An exception has been caught, just echo the message.
+	fwrite(STDOUT, $e->getMessage() . "\n");
+	exit($e->getCode());
+}

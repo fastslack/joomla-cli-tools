@@ -1,16 +1,16 @@
 #!/usr/bin/php
 <?php
 /**
-* JoomlaCliTools
-*
-* @version $Id$
-* @package JoomlaCliTools
-* @subpackage RESTfulTester
-* @copyright Copyright 2004 - 2013 Matias Aguire. All rights reserved.
-* @license GNU General Public License version 2 or later.
-* @author Matias Aguirre <maguirre@matware.com.ar>
-* @link http://www.matware.com.ar
-*/
+ * JoomlaCliTools
+ *
+ * @version    $Id$
+ * @package    JoomlaCliTools
+ * @copyright  Copyright 2021 Matias Aguirre. All rights reserved.
+ * @license    GNU General Public License version 2 or later.
+ * @author     Matias Aguirre <maguirre@matware.com.ar>
+ * @link       https://matware.com.ar
+ */
+
 // We are a valid Joomla entry point.
 define('_JEXEC', 1);
 
@@ -56,20 +56,30 @@ class RESTfulTester extends JApplicationCli
 	 * @return	none
 	 * @since	2.5.0
 	 */
-  public function execute()
+  public function doExecute()
   {
-		$task = 'total';
-		$table = 'banners_tracks';
 
-		print_r( $this->testRestPlugin($task, $table) );
+		$http = new JHttp();
+		$response = $http->get('http://localhost/gsoc17_webservices/api/index.php/article/1');
+
+print_r($response);
+
+
+
+
+
+		//$task = 'total';
+		//$table = 'banners_tracks';
+
+		//print_r( $this->testRestPlugin($task, $table) );
 
 	} // end method
 
 
 	/**
-	 * 
 	 *
-	 * @return	
+	 *
+	 * @return
 	 * @since	0.4.4
 	 * @throws	Exception
 	 */
@@ -81,11 +91,11 @@ class RESTfulTester extends JApplicationCli
 		$data = array();
 		// JHttp instance
 		$http = new JHttp();
-		$data = $this->_getRestData();
-	
+		//$data = $this->_getRestData();
+
 		// Getting the rows
-		$data['table'] = $table;
-		$data['task'] = $task;
+		//$data['table'] = $table;
+		//$data['task'] = $task;
 
 		$response = $http->get($this->params->get('url'), $data);
 

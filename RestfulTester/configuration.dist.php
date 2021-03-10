@@ -1,15 +1,15 @@
 <?php
+<?php
 /**
-* JoomlaCliTools
-*
-* @version $Id$
-* @package JoomlaCliTools
-* @subpackage RESTfulTester
-* @copyright Copyright 2004 - 2013 Matias Aguirre. All rights reserved.
-* @license GNU General Public License version 2 or later.
-* @author Matias Aguirre <maguirre@matware.com.ar>
-* @link http://www.matware.com.ar
-*/
+ * JoomlaCliTools
+ *
+ * @version    $Id$
+ * @package    JoomlaCliTools
+ * @copyright  Copyright 2021 Matias Aguirre. All rights reserved.
+ * @license    GNU General Public License version 2 or later.
+ * @author     Matias Aguirre <maguirre@matware.com.ar>
+ * @link       https://matware.com.ar
+ */
 
 // Prevent direct access to this file outside of a calling application.
 defined('_JEXEC') or die;

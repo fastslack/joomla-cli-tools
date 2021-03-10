@@ -1,12 +1,12 @@
 #!/usr/bin/php
 <?php
 /**
-* ContentCleanup
+* DeleteRows
 *
 * @version $Id$
 * @package JoomlaCliTools
-* @subpackage ContentCleanup
-* @copyright Copyright 2004 - 2013 Matias Aguirre. All rights reserved.
+* @subpackage DeleteRows
+* @copyright Copyright 2004 - 2015 Matias Aguirre. All rights reserved.
 * @license GNU General Public License version 2 or later.
 * @author Matias Aguirre <maguirre@matware.com.ar>
 * @link http://www.matware.com.ar
@@ -24,7 +24,7 @@ require dirname(dirname(__FILE__)).'/bootstrap.php';
  * This class checks some common situations that occur when the asset table is corrupted.
  */
 // Instantiate the application.
-class ContentCleanup extends JApplicationCli
+class DeleteRows extends JApplicationCli
 {
 	/**
 	* Ascii color array
@@ -59,7 +59,7 @@ class ContentCleanup extends JApplicationCli
 	 *
 	 * @return  void
 	 *
-	 * @since   11.3
+	 * @since   1.0
 	 */
 
 	public function __construct()
@@ -76,21 +76,43 @@ class ContentCleanup extends JApplicationCli
 
 	protected function doExecute()
 	{
+
+/*
+SELECT s.session_id FROM `bzjo9_mets_patients` AS p 
+LEFT JOIN `bzjo9_mets_sessions2` AS s ON s.patient_id = p.patient_id 
+WHERE p.place = 3 AND s.session_id IS NOT NULL
+
+SELECT * FROM `bzjo9_mets_sessions` WHERE mode != "" AND DATE_SUB(CURDATE(),INTERVAL 2 DAY) <= start ORDER BY `session_id` DESC
+
+
+*/
+
 		// Fixing categories assets
 		$query = $this->_db->getQuery(true);
-		$query->select('c.id');
-		$query->from('#__content AS c');
 
-		//$query->join('LEFT', '#__assets AS a ON a.id = c.asset_id');
-		//$query->where("c.created_by = 42");
-		//$query->order("a.rgt DESC, a.parent_id ASC");
+		$query->select('s.session_id');
 
-		$this->_db->setQuery($query, 0, 100);
+		// All
+		$query->from('#__mets_patients AS p');
+		$query->join('LEFT', '#__mets_sessions AS s ON s.patient_id = p.patient_id');
+		$query->where("p.place = 3");
+		$query->where("s.session_id IS NOT NULL");
+
+		// Limited time
+		//$query->from('#__mets_sessions AS s');
+		//$query->where("s.mode != ''");
+		//$query->where("DATE_SUB(CURDATE(),INTERVAL 2 DAY) <= s.start");
+
+		$query->order("s.session_id ASC");
+
+		//$this->_db->setQuery($query, 0, 100);
 		$this->_db->setQuery($query);
-		$contents = $this->_db->loadAssocList();
+		$sessions = $this->_db->loadObjectList();
+
+//print_r($sessions);
 
 		// Count items
-		$count = count($contents);
+		$count = count($sessions);
 
 		// Include the content table path
 		JTable::addIncludePath(JPATH_LIBRARIES . '/legacy/table/');
@@ -104,18 +126,21 @@ class ContentCleanup extends JApplicationCli
 		$benchmark_start = microtime(true);
 
 		// Deleting
-		foreach ($contents as $content)
+		foreach ($sessions as $session)
 		{
-			// Get the table
-			$table = JTable::getInstance('Content', 'JTable');
-			// Load it before delete. Joomla bug?
-			$table->load($content['id']);
-			// Delete
-			$table->delete($content['id']);
+			$query->clear();
+			$query->delete()->from("#__mets_sessions")->where("session_id = {$session->session_id}");
+
+			try {
+				$this->_db->setQuery($query)->execute();
+			} catch (RuntimeException $e) {
+				throw new RuntimeException($e->getMessage());
+			}
+
 			// Write ˕ to buffer
 			echo "˕";
 			// Free
-			unset($table);
+			//unset($table);
 		}
 
 		// Closing buffer
@@ -124,6 +149,8 @@ class ContentCleanup extends JApplicationCli
 		$benchmark_end = microtime(true);
 		$benchmark = $benchmark_end - $benchmark_start;
 		$this->out( "\n{$this->_c['CYAN']}[[TOTAL Benchmark]] ".round($benchmark, 3)." seconds" );
+
+
 	}
 
 } // end class
@@ -133,7 +160,7 @@ try
 {
 	// Instantiate the application object, passing the class name to JCli::getInstance
 	// and use chaining to execute the application.
-	JApplicationCli::getInstance('ContentCleanup')->execute();
+	JApplicationCli::getInstance('DeleteRows')->execute();
 }
 catch (Exception $e)
 {

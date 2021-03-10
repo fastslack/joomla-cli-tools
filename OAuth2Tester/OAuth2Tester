@@ -3,13 +3,13 @@
 /**
 * JoomlaCliTools
 *
-* @version $Id$
-* @package JoomlaCliTools
-* @subpackage OAuth2Tester
-* @copyright Copyright 2004 - 2013 Matias Aguire. All rights reserved.
-* @license GNU General Public License version 2 or later.
-* @author Matias Aguirre <maguirre@matware.com.ar>
-* @link http://www.matware.com.ar
+* @version     $Id$
+* @package     JoomlaCliTools
+* @subpackage  OAuth2Tester
+* @copyright   Copyright 2004 - 2021 Matias Aguirre. All rights reserved.
+* @license     GNU General Public License version 2 or later.
+* @author      Matias Aguirre <maguirre@matware.com.ar>
+* @link        https://matware.com.ar
 */
 // We are a valid Joomla entry point.
 define('_JEXEC', 1);
@@ -20,10 +20,16 @@ define('JPATH_BASE', dirname(__FILE__));
 // Bootstrap the application.
 require dirname(dirname(__FILE__)).'/bootstrap.php';
 
-// Import the JHTTP libraries
-jimport('joomla.http.http');
-// Import the redRAD OAuth2 client libraries
-jimport('redrad.client.oauth2');
+// JConfig
+if (file_exists( __DIR__ . '/configuration.php'))
+{
+	require __DIR__ . '/configuration.php';
+}
+
+use Joomla\CMS\Http\Http;
+use Joomla\Registry\Registry;
+use Joomla\CMS\Factory;
+use Joomla\CMS\Log\Log;
 
 class OAuth2Tester extends JApplicationCli
 {
@@ -46,32 +52,32 @@ class OAuth2Tester extends JApplicationCli
 	*
 	* @since 1.0
 	*/
-	public function __construct(JRegistry $options = null, JOAuth2Client $client = null)
+	public function __construct(Registry $options = null, JOAuth2Client $client = null)
 	{
 		// Call the parent __construct method so it bootstraps the application class.
 		parent::__construct();
 
 		// Set the custom options if exists
-		$this->options = isset($options) ? $options : new JRegistry(new JConfig);
+		$this->options = isset($options) ? $options : new Registry(new JConfig);
 
 		// Prevent Joomla! libraries error
 		// PHP Notice:  Undefined index: HTTP_HOST
-		$_SERVER['HTTP_HOST'] = null;	
+		$_SERVER['HTTP_HOST'] = null;
 
 		// Creating first dabatase instance
-		$this->_db = JFactory::getDBO();
+		$this->_db = Factory::getDBO();
 
 		// JHttp instance
-		$this->http = new JHttp();
+		$this->http = new Http();
 
 		// Add the logger.
-		JLog::addLogger(
+		Log::addLogger(
 			// Pass an array of configuration options
 			array(
 				// Set the name of the log file
 				'text_file' => JPATH_BASE.'/logs/OAuth2Tester.log.php'
 			)
-		);	
+		);
 	}
 
 	/**
@@ -83,19 +89,21 @@ class OAuth2Tester extends JApplicationCli
   public function execute()
   {
 		// Initialise the OAuth 2.0 client
-		$client = new RClientOAuth2($this->options);
+		$client = new MClientOAuth2($this->options);
+
+		// Send the initial session request
+		$client->setOption('url', $this->options->get('hostname').'/api/mets:login');
 
 		// Fetch the token from server
 		$token = $client->fetchAccessToken();
 
+print_r($token);
+
 		// Get the resource
-		$resource = $client->getResource($token->access_token);
+		//$resource = $client->getResource($token->access_token);
 
-		$resourceObj = json_decode($resource);
-		print_r($resourceObj);
-
-		//JLoader::register('ROAuth2Response', JPATH_ROOT.'/api/application/hal.php');
-		//$hal = new ApiApplicationHal;
+		//$resourceObj = 		json_decode($resource);
+		//print_r($resourceObj);
 
 	} // end method
 
