@@ -5,7 +5,7 @@
 * @version $Id$
 * @package JoomlaCliTools
 * @subpackage CreateJoomlaView
-* @copyright Copyright 2004 - 2014 Matias Aguirre. All rights reserved.
+* @copyright Copyright 2004 - 2015 Matias Aguirre. All rights reserved.
 * @license GNU General Public License version 2 or later.
 * @author Matias Aguirre <maguirre@matware.com.ar>
 * @link http://www.matware.com.ar

@@ -1,21 +1,21 @@
 <?php
 /**
-* {OPTIONNAMEUCFIRST}
-*
-* @version $Id:
-* @package Matware.{OPTIONNAMEUCFIRST}
-* @copyright Copyright (C) 2004 - 2014 Matware. All rights reserved.
-* @author Matias Aguirre
-* @email maguirre@matware.com.ar
-* @link http://www.matware.com.ar/
-* @license GNU General Public License version 2 or later; see LICENSE
-*/
+ * {OPTIONNAMEUCFIRST}
+ *
+ * @version    $Id:
+ * @package    {CONFIGPACKAGE}
+ * @copyright  {CONFIGCOPYRIGHT}
+ * @author     {CONFIGAUTHOR}
+ * @email      {CONFIGEMAIL}
+ * @link       {CONFIGLINK}
+ * @license    GNU General Public License version 2 or later; see LICENSE
+ */
 // No direct access to this file
 defined('_JEXEC') or die('Restricted access');
- 
+
 // import Joomla modelform library
 jimport('joomla.application.component.modeladmin');
- 
+
 /**
  * {MODELFORMNAME} Model
  */
@@ -30,7 +30,7 @@ class {MODELFORMNAME} extends JModelAdmin
 	* @return      JTable  A database object
 	* @since       2.5
 	*/
-	public function getTable($type = '{VIEWNAMEUCFIRST}', $prefix = '{OPTIONNAMEUCFIRST}Table', $config = array()) 
+	public function getTable($type = '{VIEWNAMEUCFIRST}', $prefix = '{OPTIONNAMEUCFIRST}Table', $config = array())
 	{
 		return JTable::getInstance($type, $prefix, $config);
 	}
@@ -43,12 +43,12 @@ class {MODELFORMNAME} extends JModelAdmin
 	* @return      mixed   A JForm object on success, false on failure
 	* @since       2.5
 	*/
-	public function getForm($data = array(), $loadData = true) 
+	public function getForm($data = array(), $loadData = true)
 	{
 		// Get the form.
 		$form = $this->loadForm('com_{OPTIONNAME}.{VIEWNAME}', '{VIEWNAME}',
     	array('control' => 'jform', 'load_data' => $loadData));
-		if (empty($form)) 
+		if (empty($form))
 		{
     	return false;
 		}
@@ -61,11 +61,11 @@ class {MODELFORMNAME} extends JModelAdmin
 	* @return      mixed   The data for the form.
 	* @since       2.5
 	*/
-	protected function loadFormData() 
+	protected function loadFormData()
 	{
 		// Check the session for previously entered form data.
 		$data = JFactory::getApplication()->getUserState('com_{OPTIONNAME}.edit.{VIEWNAME}.data', array());
-		if (empty($data)) 
+		if (empty($data))
 		{
 		  $data = $this->getItem();
 		}

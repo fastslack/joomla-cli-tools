@@ -1,15 +1,15 @@
 <?php
 /**
-* {OPTIONNAMEUCFIRST}
-*
-* @version $Id:
-* @package Matware.{OPTIONNAMEUCFIRST}
-* @copyright Copyright (C) 2004 - 2014 Matware. All rights reserved.
-* @author Matias Aguirre
-* @email maguirre@matware.com.ar
-* @link http://www.matware.com.ar/
-* @license GNU General Public License version 2 or later; see LICENSE
-*/
+ * {OPTIONNAMEUCFIRST}
+ *
+ * @version    $Id:
+ * @package    {CONFIGPACKAGE}
+ * @copyright  {CONFIGCOPYRIGHT}
+ * @author     {CONFIGAUTHOR}
+ * @email      {CONFIGEMAIL}
+ * @link       {CONFIGLINK}
+ * @license    GNU General Public License version 2 or later; see LICENSE
+ */
 // No direct access to this file
 defined('_JEXEC') or die('Restricted access');
 // import the Joomla modellist library
@@ -45,7 +45,7 @@ class {MODELLISTNAME} extends JModelList
 	* @return      JTable  A database object
 	* @since       2.5
 	*/
-	public function getTable($type = '{VIEWNAMEUCFIRST}', $prefix = '{OPTIONNAMEUCFIRST}Table', $config = array()) 
+	public function getTable($type = '{VIEWNAMEUCFIRST}', $prefix = '{OPTIONNAMEUCFIRST}Table', $config = array())
 	{
 		return JTable::getInstance($type, $prefix, $config);
 	}
@@ -105,7 +105,7 @@ class {MODELLISTNAME} extends JModelList
 	*/
 	protected function getListQuery()
 	{
-		// Create a new query object.           
+		// Create a new query object.
 		$db = JFactory::getDBO();
 		$query = $db->getQuery(true);
 		// Select some fields

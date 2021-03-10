@@ -1,15 +1,15 @@
 <?php
 /**
-* {OPTIONNAMEUCFIRST}
-*
-* @version $Id:
-* @package Matware.{OPTIONNAMEUCFIRST}
-* @copyright Copyright (C) 2004 - 2014 Matware. All rights reserved.
-* @author Matias Aguirre
-* @email maguirre@matware.com.ar
-* @link http://www.matware.com.ar/
-* @license GNU General Public License version 2 or later; see LICENSE
-*/
+ * {OPTIONNAMEUCFIRST}
+ *
+ * @version    $Id:
+ * @package    {CONFIGPACKAGE}
+ * @copyright  {CONFIGCOPYRIGHT}
+ * @author     {CONFIGAUTHOR}
+ * @email      {CONFIGEMAIL}
+ * @link       {CONFIGLINK}
+ * @license    GNU General Public License version 2 or later; see LICENSE
+ */
 // Check to ensure this file is included in Joomla!
 defined('_JEXEC') or die();
 
@@ -32,7 +32,7 @@ class {VIEWLISTNAME} extends JViewLegacy {
 		$this->activeFilters = $this->get('ActiveFilters');
 
 		// Check for errors.
-		if (count($errors = $this->get('Errors'))) 
+		if (count($errors = $this->get('Errors')))
 		{
 			JError::raiseError(500, implode('<br />', $errors));
 			return false;
@@ -47,7 +47,7 @@ class {VIEWLISTNAME} extends JViewLegacy {
 	/**
 	* Setting the toolbar
 	*/
-	protected function addToolBar() 
+	protected function addToolBar()
 	{
 		$canDo = JHelperContent::getActions('com_{OPTIONNAME}', '{VIEWNAME}', $this->state->get('filter.published'));
 		$user  = JFactory::getUser();

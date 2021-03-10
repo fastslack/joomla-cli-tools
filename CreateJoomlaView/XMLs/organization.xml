@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="utf-8"?>
+<form>
+
+    <fieldset name="organizations">
+
+        <field
+                name="name"
+                type="text"
+                label="COM_RIKI_FIELD_NAME_LABEL"
+                size="40"
+        />
+
+        <field
+                name="type"
+                type="list"
+                label="JSTATUS"
+                description="COM_BANNERS_FIELD_CLIENT_STATE_DESC"
+                class="chzn-color-state"
+                size="1"
+                default="1"
+        >
+            <option value="0">- Select</option>
+            <option value="2">Basisschool</option>
+            <option value="2">Zonnebloemafdeling</option>
+            <option value="3">Verzorgingshuis</option>
+            <option value="4">Anders</option>
+        </field>
+
+        <field
+                name="street"
+                type="text"
+                label="COM_RIKI_FIELD_STREET_LABEL"
+                size="40"
+        />
+
+        <field
+                name="houseNumber"
+                type="integer"
+                label="COM_RIKI_FIELD_HOUSENUMBER_LABEL"
+                size="40"
+        />
+
+        <field
+                name="zipcode"
+                type="text"
+                label="COM_RIKI_FIELD_ZIPCODE_LABEL"
+                size="40"
+        />
+
+        <field
+                name="city"
+                type="text"
+                label="COM_RIKI_FIELD_CITY_LABEL"
+                size="40"
+        />
+
+        <field
+                name="packages"
+                type="list"
+                label="COM_RIKI_FIELD_PACKAGES_LABEL"
+                description="COM_RIKI_FIELD_PACKAGES_DESC"
+                default="0"
+                class="chzn-color"
+        >
+            <option value="-1">JGLOBAL_USE_GLOBAL</option>
+            <option value="0">JNO</option>
+            <option value="1">JYES</option>
+        </field>
+
+        <field name="contacts"
+               type="repeatable"
+               description="COM_RIKI_PARAMS_REPEATABLE_CONTACTS_DESC"
+               label="COM_RIKI_PARAMS_REPEATABLE_CONTACTS">
+            <field
+                    name="name"
+                    label="COM_RIKI_PARAMS_REPEATABLE_NAME"
+                    description="COM_RIKI_PARAMS_REPEATABLE_NAME_DESC"
+                    type="text"
+            />
+            <field
+                    name="function"
+                    label="COM_RIKI_PARAMS_REPEATABLE_FUNCTION"
+                    description="COM_RIKI_PARAMS_REPEATABLE_FUNCTION_DESC"
+                    type="text"
+            />
+            <field
+                    name="email"
+                    label="COM_RIKI_PARAMS_REPEATABLE_EMAIL"
+                    description="COM_RIKI_PARAMS_REPEATABLE_EMAIL_DESC"
+                    type="email"
+            />
+            <field
+                    name="phone"
+                    label="COM_RIKI_PARAMS_REPEATABLE_FUNCTION"
+                    description="COM_RIKI_PARAMS_REPEATABLE_FUNCTION_DESC"
+                    type="tel"
+            />
+
+            <field
+                    name="primary"
+                    type="list"
+                    label="COM_RIKI_PARAMS_REPEATABLE_PRIMARY"
+                    description="COM_RIKI_PARAMS_REPEATABLE_PRIMARY_DESC"
+                    default="0"
+                    class="chzn-color"
+            >
+                <option value="-1">JGLOBAL_USE_GLOBAL</option>
+                <option value="0">JNO</option>
+                <option value="1">JYES</option>
+            </field>
+        </field>
+
+        <field name="notes"
+               type="repeatable"
+               description="COM_RIKI_PARAMS_REPEATABLE_NOTES_DESC"
+               label="COM_RIKI_PARAMS_REPEATABLE_NOTES">
+            <field
+                    name="note"
+                    label="COM_RIKI_PARAMS_REPEATABLE_NOTE"
+                    description="COM_RIKI_PARAMS_REPEATABLE_NOTE_DESC"
+                    type="textarea"
+            />
+            <field
+                    name="date"
+                    label="COM_RIKI_PARAMS_REPEATABLE_DATE"
+                    description="COM_RIKI_PARAMS_REPEATABLE_DATE_DESC"
+                    type="calendar"
+            />
+            <field
+                    name="by"
+                    label="COM_RIKI_PARAMS_REPEATABLE_BY"
+                    description="COM_RIKI_PARAMS_REPEATABLE_BY_DESC"
+                    type="user"
+            />
+
+        </field>
+
+    </fieldset>
+</form>
