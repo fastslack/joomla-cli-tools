@@ -14,7 +14,8 @@
   "require": {
     "joomla/filesystem": "^1.5",
     "joomla/application": "^1.9",
-    "joomla/database": "^1.7"
+    "joomla/database": "^1.7",
+    "ext-simplexml": "*"
   },
   "autoload": {
     "psr-4": {

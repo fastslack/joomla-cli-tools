@@ -19,7 +19,7 @@ require_once dirname(__DIR__) . '/vendor/autoload.php';
 
 define('JPATH_ROOT', dirname(__DIR__));
 
-use JoomlaCliTools\CreateJoomlaView;
+use JoomlaCliTools\CreateJoomlaView\CreateJoomlaView;
 
 class CreateJoomlaViewCli extends CreateJoomlaView
 {

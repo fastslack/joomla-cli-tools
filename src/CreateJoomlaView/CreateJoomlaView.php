@@ -1,4 +1,3 @@
-#!/usr/bin/php
 <?php
 /**
  * JoomlaCliTools
@@ -6,13 +5,13 @@
  * @version    $Id$
  * @package    JoomlaCliTools
  * @subpackage CreateJoomlaView
- * @copyright  Copyright 2004 - 2019 Matias Aguirre. All rights reserved.
+ * @copyright  Copyright 2004 - 2021 Matias Aguirre. All rights reserved.
  * @license    GNU General Public License version 2 or later.
  * @author     Matias Aguirre <maguirre@matware.com.ar>
- * @link       http://www.matware.com.ar
+ * @link       https://www.matware.com.ar
  */
 
-namespace JoomlaCliTools;
+namespace JoomlaCliTools\CreateJoomlaView;
 
 require_once dirname(dirname(__DIR__)) . '/vendor/autoload.php';
 
@@ -32,6 +31,38 @@ class CreateJoomlaView extends AbstractCliApplication
 	 * @since  1.0
 	 */
 	protected $db;
+
+	/**
+	 * XML file
+	 *
+	 * @var    Database\DatabaseDriver
+	 * @since  1.0
+	 */
+	protected $xml;
+
+	/**
+	 * View name.
+	 *
+	 * @var    Database\DatabaseDriver
+	 * @since  1.0
+	 */
+	protected $viewname;
+
+	/**
+	 * Layer.
+	 *
+	 * @var    Database\DatabaseDriver
+	 * @since  1.0
+	 */
+	protected $layer;
+
+	/**
+	 * Joomla path
+	 *
+	 * @var    Database\DatabaseDriver
+	 * @since  1.0
+	 */
+	protected $joomlapath;
 
 	protected function initialise()
 	{
@@ -72,9 +103,12 @@ class CreateJoomlaView extends AbstractCliApplication
 
 		// Define JPATH_BASE
 		define('JPATH_BASE', $this->joomlapath);
-		define('JPATH_ROOT', $this->joomlapath);
 
-		if (($this->layer != 'admin' && $this->layer != 'site') || empty($this->xml) || empty($config) || empty($this->component))
+		if (!defined('JPATH_ROOT')) {
+			define('JPATH_ROOT', $this->joomlapath);
+		}
+
+		if (($this->layer != 'admin' && $this->layer != 'site') || empty($this->xml) || empty($this->component))
 		{
 			$this->help();
 			$this->close();
@@ -217,6 +251,8 @@ class CreateJoomlaView extends AbstractCliApplication
 
 		$this->replace['TABLENAME'] = ucfirst($this->option) . "Table" . ucfirst($this->viewname);
 
+		$this->replace['HEADERCOMMENT'] = file_get_contents(__DIR__ . "/stub/header.txt");
+
 		// Create the modal filter
 		$this->createModalFilter();
 
@@ -279,13 +315,13 @@ class CreateJoomlaView extends AbstractCliApplication
 	 *
 	 * @since    1.0.0
 	 */
-	public function replaceFile($file, $list)
+	public function replaceFile($file)
 	{
 		// Get the content of the file
 		$buffer = file_get_contents(__DIR__ . "/stub/{$this->layer}/{$file}");
 
 		// Replace the defined content
-		foreach ($list as $key => $value)
+		foreach ($this->replace as $key => $value)
 		{
 			$buffer = str_replace("{{$key}}", $value, $buffer);
 		}
@@ -406,7 +442,6 @@ EOD;
 		$files[] = '/views/examples/tmpl/default.php';
 		$files[] = '/views/examples/tmpl/default_body.php';
 		$files[] = '/views/examples/tmpl/default_foot.php';
-		$files[] = '/views/examples/tmpl/default_head.php';
 		$files[] = '/views/examples/tmpl/default_head.php';
 
 		return $files;
